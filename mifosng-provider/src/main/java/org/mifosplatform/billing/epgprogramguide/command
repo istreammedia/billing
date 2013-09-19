@@ -1,0 +1,19 @@
+
+public CommandWrapperBuilder createEpg() {
+	this.actionName = "CREATE";
+	this.entityName = "EPGPROGRAMGUIDE";
+	this.entityId = null;
+	this.href = "/epgprogramguide";
+	return this;
+}
+
+
+ else if(wrapper.isEpgProgramGuide()){
+			 if(wrapper.isCreate()){
+			    handler = applicationContext.getBean("createEpgProgramGuideCommandHandler", NewCommandSourceHandler.class);
+			    }
+			 }
+
+public boolean isEpgProgramGuide() {
+			return this.entityName.equalsIgnoreCase("EPGPROGRAMGUIDE") && this.actionName.equalsIgnoreCase("CREATE");
+		}

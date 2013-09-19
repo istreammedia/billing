@@ -1,0 +1,291 @@
+package org.mifosplatform.billing.order.service;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import org.joda.time.LocalDate;
+import org.mifosplatform.billing.billingorder.exceptions.BillingOrderNoRecordsFoundException;
+import org.mifosplatform.billing.contract.domain.Contract;
+import org.mifosplatform.billing.contract.domain.SubscriptionRepository;
+import org.mifosplatform.billing.discountmaster.domain.DiscountMaster;
+import org.mifosplatform.billing.discountmaster.domain.DiscountMasterRepository;
+import org.mifosplatform.billing.discountmaster.exceptions.DiscountMasterNoRecordsFoundException;
+import org.mifosplatform.billing.eventorder.service.PrepareRequestWriteplatformService;
+import org.mifosplatform.billing.order.domain.Order;
+import org.mifosplatform.billing.order.domain.OrderDiscount;
+import org.mifosplatform.billing.order.domain.OrderLine;
+import org.mifosplatform.billing.order.domain.OrderPrice;
+import org.mifosplatform.billing.order.domain.OrderPriceRepository;
+import org.mifosplatform.billing.order.domain.OrderReadPlatformImpl;
+import org.mifosplatform.billing.order.domain.OrderRepository;
+import org.mifosplatform.billing.order.exceptions.NoOrdersFoundException;
+import org.mifosplatform.billing.order.serialization.OrderCommandFromApiJsonDeserializer;
+import org.mifosplatform.billing.plan.data.ServiceData;
+import org.mifosplatform.billing.plan.domain.Plan;
+import org.mifosplatform.billing.plan.domain.PlanRepository;
+import org.mifosplatform.billing.pricing.data.PriceData;
+import org.mifosplatform.infrastructure.codes.exception.CodeNotFoundException;
+import org.mifosplatform.infrastructure.core.api.JsonCommand;
+import org.mifosplatform.infrastructure.core.data.CommandProcessingResult;
+import org.mifosplatform.infrastructure.core.data.CommandProcessingResultBuilder;
+import org.mifosplatform.infrastructure.core.service.TenantAwareRoutingDataSource;
+import org.mifosplatform.infrastructure.security.service.PlatformSecurityContext;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.stereotype.Service;
+
+
+
+@Service
+public class OrderWritePlatformServiceImpl implements OrderWritePlatformService {
+	private final PlatformSecurityContext context;
+	private final OrderRepository orderRepository;
+	private final PlanRepository planRepository;
+	private final SubscriptionRepository subscriptionRepository;
+	private final OrderPriceRepository OrderPriceRepository;
+	private final JdbcTemplate jdbcTemplate;
+	private final OrderCommandFromApiJsonDeserializer fromApiJsonDeserializer;
+	private final PrepareRequestWriteplatformService prepareRequestWriteplatformService;
+    private final DiscountMasterRepository discountMasterRepository;
+	
+	@Autowired
+	public OrderWritePlatformServiceImpl(final PlatformSecurityContext context,final OrderRepository orderRepository,
+			final PlanRepository planRepository,final OrderPriceRepository OrderPriceRepository,final TenantAwareRoutingDataSource dataSource,
+			final SubscriptionRepository subscriptionRepository,final OrderCommandFromApiJsonDeserializer fromApiJsonDeserializer,
+			final PrepareRequestWriteplatformService prepareRequestWriteplatformService,final DiscountMasterRepository discountMasterRepository) {
+		this.context = context;
+		this.orderRepository = orderRepository;
+		// this.OrderLineRepository = OrderLineRepository;
+		this.OrderPriceRepository = OrderPriceRepository;
+		this.planRepository = planRepository;
+		this.prepareRequestWriteplatformService=prepareRequestWriteplatformService;
+		this.subscriptionRepository = subscriptionRepository;
+		this.fromApiJsonDeserializer=fromApiJsonDeserializer;
+		this.discountMasterRepository=discountMasterRepository;
+		this.jdbcTemplate = new JdbcTemplate(dataSource);
+
+	}
+	
+	@Override
+	public CommandProcessingResult createOrder(Long clientId,
+			JsonCommand command) {
+	try{
+			context.authenticatedUser();
+			this.fromApiJsonDeserializer.validateForCreate(command.json());
+			List<OrderLine> serviceDetails = new ArrayList<OrderLine>();
+			List<OrderPrice> orderprice = new ArrayList<OrderPrice>();
+			OrderReadPlatformImpl obj = new OrderReadPlatformImpl(context,jdbcTemplate);
+            Order order=Order.fromJson(clientId,command);
+			Plan plan = this.planRepository.findOne(order.getPlanId());
+			List<ServiceData> details = obj.retrieveAllServices(order.getPlanId());
+			List<PriceData> datas = obj.retrieveAllPrices(order.getPlanId(),order.getBillingFrequency());
+			LocalDate endDate = null;
+			Contract subscriptionData = this.subscriptionRepository.findOne(order.getContarctPeriod());
+			LocalDate startDate=new LocalDate(order.getStartDate());
+			
+			//Calculate EndDate
+			endDate = calculateEndDate(startDate,subscriptionData);
+			
+			order=new Order(order.getClientId(),order.getPlanId(),plan.getStatus(),null,order.getBillingFrequency(),startDate, endDate,
+					order.getContarctPeriod(), serviceDetails, orderprice,order.getbillAlign());
+			for (PriceData data : datas) {
+				LocalDate billstartDate = startDate;
+				LocalDate billEndDate = null;
+				// end date is null for rc
+				if (data.getChagreType().equalsIgnoreCase("RC")	&& endDate != null) {
+					billEndDate = endDate;
+				} else if(data.getChagreType().equalsIgnoreCase("NRC")) {
+					billEndDate = billstartDate;
+				}
+				  final DiscountMaster discountMaster=this.discountMasterRepository.findOne(data.getDiscountId());
+				  if(discountMaster == null){
+					  throw new DiscountMasterNoRecordsFoundException();
+				  }
+				OrderPrice price = new OrderPrice(data.getServiceId(),data.getChargeCode(), data.getCharging_variant(),
+						data.getPrice(), null, data.getChagreType(),data.getChargeDuration(), data.getDurationType(),
+						billstartDate.toDate(), billEndDate);
+				order.addOrderDeatils(price);
+				
+				//discount Order
+				OrderDiscount orderDiscount=new OrderDiscount(order,price,discountMaster.getId(),startDate.toDate(),endDate,
+						discountMaster.getDiscountType(),discountMaster.getDiscountRate());
+				price.addOrderDiscount(orderDiscount);
+				
+			}
+
+			for (ServiceData data : details) {
+				OrderLine orderdetails = new OrderLine(data.getPlanId(),
+						data.getCode(), plan.getStatus(), 'n');
+				order.addServiceDeatils(orderdetails);
+			}
+		     
+		
+		
+			this.orderRepository.save(order);
+			 
+			//Prepare a Requset For Order
+			this.prepareRequestWriteplatformService.prepareNewRequest(order,plan.getProvisionSystem());
+			
+			return new CommandProcessingResult(order.getPlanId());
+		
+	
+	
+	}catch (DataIntegrityViolationException dve) {
+		handleCodeDataIntegrityIssues(command, dve);
+		return new CommandProcessingResult(Long.valueOf(-1));
+	}
+	}
+	
+	
+	//Calculate EndDate
+	public LocalDate calculateEndDate(LocalDate startDate,Contract subscriptionData) {
+		
+		LocalDate contractEndDate = null;
+		if (subscriptionData.getSubscriptionType().equalsIgnoreCase("DAY(s)")) {
+			
+			 contractEndDate = startDate.plusDays(subscriptionData.getUnits().intValue() - 1);
+		} else if (subscriptionData.getSubscriptionType().equalsIgnoreCase("MONTH(s)")) {
+			
+			 contractEndDate = startDate	.plusMonths(subscriptionData.getUnits().intValue()).minusDays(1);
+		} else if (subscriptionData.getSubscriptionType().equalsIgnoreCase("YEAR(s)")) {
+			
+			 contractEndDate = startDate.plusYears(subscriptionData.getUnits().intValue()).minusDays(1);
+		} else if (subscriptionData.getSubscriptionType().equalsIgnoreCase("week(s)")) {
+			
+			 contractEndDate = startDate.plusWeeks(subscriptionData.getUnits().intValue()).minusDays(1);
+		}
+ 
+		return contractEndDate;
+		
+	}
+
+	private void handleCodeDataIntegrityIssues(JsonCommand command,DataIntegrityViolationException dve) {
+	}
+	@Override
+	public CommandProcessingResult updateOrderPrice(Long orderId,JsonCommand command) {
+		try
+		{
+		 context.authenticatedUser();
+	     final OrderPrice orderPrice = retrievePriceBy(orderId);
+	     orderPrice.setPrice(command);
+		 this.OrderPriceRepository.save(orderPrice);
+         return new CommandProcessingResultBuilder() //
+         .withCommandId(command.commandId()) //
+         .withEntityId(orderId) //
+         .with(null) //
+         .build();
+	} catch (DataIntegrityViolationException dve) {
+		handleCodeDataIntegrityIssues(command, dve);
+		return new CommandProcessingResult(Long.valueOf(-1));
+	}
+	}
+
+	private OrderPrice retrievePriceBy(Long orderId) {
+		 final OrderPrice orderPrice = this.OrderPriceRepository.findOne(orderId);
+	        if (orderPrice == null) { throw new CodeNotFoundException(orderId.toString()); }
+	        return orderPrice;
+	}
+
+	@Override
+	public CommandProcessingResult deleteOrder(Long orderId, JsonCommand command) {
+		
+		Order order = this.orderRepository.findOne(orderId);
+		
+		List<OrderLine> orderline = order.getServices();
+		List<OrderPrice> orderPrices=order.getPrice();
+		for(OrderPrice price:orderPrices){
+			price.delete();
+		}
+		for (OrderLine orderData : orderline) {
+			orderData.delete();
+		}
+		order.delete();
+		this.orderRepository.save(order);
+		return new CommandProcessingResult(order.getId());
+	}
+
+	@Override
+	public CommandProcessingResult updateOrder(JsonCommand command ) {
+		try {
+			
+			this.fromApiJsonDeserializer.validateForDisconnectOrder(command.json());
+			Order order = this.orderRepository.findOne(command.entityId());
+			LocalDate currentDate = new LocalDate();
+			currentDate.toDate();
+			List<OrderPrice> orderPrices=order.getPrice();
+			for(OrderPrice price:orderPrices){
+				price.updateDates(new LocalDate());
+			}
+			order.update(command);
+			this.orderRepository.save(order);
+			return new CommandProcessingResult(Long.valueOf(order.getId()));
+		} catch (DataIntegrityViolationException dve) {
+			handleCodeDataIntegrityIssues(null,dve);
+			return new CommandProcessingResult(Long.valueOf(-1));
+		}
+	}
+
+	@Override
+	public CommandProcessingResult renewalClientOrder(JsonCommand command) {
+		
+		try{
+			
+			this.fromApiJsonDeserializer.validateForRenewalOrder(command.json());
+			Order orderDetails=this.orderRepository.findOne(command.entityId());
+			
+			if(orderDetails == null){
+				throw new NoOrdersFoundException(command.entityId());
+			}
+		    final Long contractPeriod = command.longValueOfParameterNamed("renewalPeriod");
+		    
+		    Contract contractDetails=this.subscriptionRepository.findOne(contractPeriod);
+		    LocalDate renewalEndDate=calculateEndDate(new LocalDate(orderDetails.getEndDate()),contractDetails);
+		      orderDetails.setEndDate(renewalEndDate);
+		      this.orderRepository.save(orderDetails);
+		  	return new CommandProcessingResult(Long.valueOf(orderDetails.getId()));
+			
+		}catch (DataIntegrityViolationException dve) {
+			handleCodeDataIntegrityIssues(null,dve);
+			return new CommandProcessingResult(Long.valueOf(-1));
+		}
+		
+	
+		
+		
+	
+	}
+
+	@Override
+	public CommandProcessingResult reconnectOrder(Long orderId) {
+	  try{
+		  this.context.authenticatedUser();
+		  Order order=this.orderRepository.findOne(orderId);
+		  if(order == null){
+			  throw new NoOrdersFoundException(orderId);
+		  }
+		  final LocalDate startDate=new LocalDate();
+		  
+		  Long contractId=order.getContarctPeriod();
+		  
+			  Contract contractPeriod=this.subscriptionRepository.findOne(contractId);
+		
+		  LocalDate EndDate=calculateEndDate(startDate,contractPeriod);
+		   order.setStartDate(startDate);
+		   order.setEndDate(EndDate);
+		   order.setStatus();
+		   this.orderRepository.save(order);
+		   
+		   return new CommandProcessingResult(order.getId());
+		  
+		  
+	  }catch(DataIntegrityViolationException dve){
+		  handleCodeDataIntegrityIssues(null, dve);
+		  return new CommandProcessingResult(Long.valueOf(-1));
+	  }
+		
+		
+	}	
+	}
+	
+

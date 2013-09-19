@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+
+
+  <bean id="cronQuartzProcessRequestShedule" class="org.mifosplatform.scheduledjobs.ProcessRequestSheduledJob">
+     <constructor-arg ref="processRequestWriteplatformService" />
+     
+    </bean>
+  
+
+    <bean id="cronQuartzJobB" class="org.mifosplatform.scheduledjobs.JobB"/>
+
+    <bean id="jobProcessRequestSheduleDetail" class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
+        <property name="group" value="mifosJobs" />
+        <property name="targetObject" ref="cronQuartzProcessRequestShedule" />
+        <property name="targetMethod" value="execute" />
+        <property name="concurrent" value="false" />
+    </bean>
+    <bean id="jobBDetail" class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
+        <property name="group" value="mifosJobs" />
+        <property name="targetObject" ref="cronQuartzJobB" />
+        <property name="targetMethod" value="execute" />
+        <property name="concurrent" value="false"/>
+    </bean>
+
+
+    <bean id="cronTriggerProcessRequestShedule" class="org.springframework.scheduling.quartz.CronTriggerFactoryBean">
+
+        <property name="jobDetail" ref="jobProcessRequestSheduleDetail" />
+        <property name="cronExpression" value="0 0/1 * * * ?" />
+    </bean>
+    <bean id="cronTriggerB" class="org.springframework.scheduling.quartz.CronTriggerFactoryBean">
+
+        <property name="jobDetail" ref="jobBDetail" />
+        <property name="cronExpression" value="59 59 23 * * ?" />
+    </bean>
+
+    <bean name="schedulerFactory" class="org.springframework.scheduling.quartz.SchedulerFactoryBean">
+
+        <property name="triggers">
+            <list>
+                <ref bean="cronTriggerProcessRequestShedule" />
+                <ref bean="cronTriggerB" />
+            </list>
+        </property>
+
+    </bean>
+
+</beans>
