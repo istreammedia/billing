@@ -17,7 +17,7 @@ public interface InventoryItemDetailsReadPlatformService {
 	
 	public InventoryItemDetailsData retriveIndividualItemDetails();
 
-	public List<QuantityData> retriveSerialNumbers(Long oneTimeSaleId);
+	public List<String> retriveSerialNumbers(Long oneTimeSaleId);
 	
 	public QuantityData retriveQuantity(Long oneTimeSaleId);
 	
@@ -25,7 +25,7 @@ public interface InventoryItemDetailsReadPlatformService {
 	
 	public List<Long> retriveSerialNumberForItemMasterId(String serialNumber);
 
-	public InventoryItemSerialNumberData retriveAllocationData(List<QuantityData> itemSerialNumbers,QuantityData quantityData, ItemMasterIdData itemMasterIdData);
+	public InventoryItemSerialNumberData retriveAllocationData(List<String> itemSerialNumbers,QuantityData quantityData, ItemMasterIdData itemMasterIdData);
 	
 	public InventoryItemDetails retriveInventoryItemDetail(String serialNumber,Long itemMasterId);
 

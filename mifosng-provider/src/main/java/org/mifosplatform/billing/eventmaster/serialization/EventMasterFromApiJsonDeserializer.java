@@ -64,7 +64,7 @@ public class EventMasterFromApiJsonDeserializer {
         baseDataValidator.reset().parameter("eventStartDate").value(eventStartDate).notBlank();
         final LocalDate eventValidity = fromApiJsonHelper.extractLocalDateNamed("eventValidity", element);
         baseDataValidator.reset().parameter("eventValidity").value(eventValidity).notBlank();
-        final String[] services = fromApiJsonHelper.extractArrayNamed("services", element);
+        final String[] services = fromApiJsonHelper.extractArrayNamed("mediaData", element);
 	        baseDataValidator.reset().parameter("services").value(services).arrayNotEmpty();
 	        final Long status = fromApiJsonHelper.extractLongNamed("status", element);
 	        baseDataValidator.reset().parameter("status").value(status).notNull();

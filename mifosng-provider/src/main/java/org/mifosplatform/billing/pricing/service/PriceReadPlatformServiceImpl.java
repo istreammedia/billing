@@ -134,20 +134,20 @@ public class PriceReadPlatformServiceImpl implements PriceReadPlatformService{
 	}
 
 		 @Override
-			public List<ServiceData> retrievePriceDetails(String planCode) {
+			public List<ServiceData> retrievePriceDetails(String planId) {
 
 				  context.authenticatedUser();
 
-			        String sql = "SELECT  p.plan_code as plan_code,pm.id as id,pm.service_code as service_code,se.service_description as service_description,"
-			        		   +" c.charge_description as charge_description,pm.charge_code as charge_code,pm.charging_variant as charging_variant,pm.price as price,"
-			        		  +" pr.priceregion_name as priceregion from  b_plan_master p,b_plan_pricing  pm,b_service se,b_charge_codes c,b_priceregion_master pr"
-			        		  +" where p.id=pm.plan_id and pm.service_code = se.service_code and  pm.price_region_id =pr.id  AND "
-			        		   +" pm.charge_code=c.charge_code and pm.is_deleted='n' and se.is_deleted='n' and  pm.plan_id ='"+planCode+"'";
+			        String sql = "SELECT p.plan_code AS plan_code,pm.id AS id,pm.service_code AS service_code,se.service_description AS service_description," +
+			        		"c.charge_description AS charge_description,pm.charge_code AS charge_code,pm.charging_variant AS charging_variant,pm.price AS price," +
+			        		"pr.priceregion_name AS priceregion FROM b_plan_master p,b_service se,b_charge_codes c,b_plan_pricing pm  left join b_priceregion_master " +
+			        		"pr on  pm.price_region_id=pr.id WHERE p.id = pm.plan_id AND pm.service_code = se.service_code AND pm.charge_code=c.charge_code and " +
+			        		"pm.is_deleted='n' and se.is_deleted='n' and  pm.plan_id =?";
 
 
 			        RowMapper<ServiceData> rm = new PriceMapper();
 
-			        return this.jdbcTemplate.query(sql, rm, new Object[] { });
+			        return this.jdbcTemplate.query(sql, rm, new Object[] {planId });
 			}
 
 
@@ -277,7 +277,7 @@ public List<ServiceData> retrieveServiceCodeDetails(Long planCode) {
 public PricingData retrieveSinglePriceDetails(String priceId) {
 	 context.authenticatedUser();
 
-     String sql = "SELECT p.plan_id AS planId,p.plan_code as planCode,s.id AS serviceId,c.id AS chargeId,p.charging_variant AS chargeVariant,p.price AS price," +
+     String sql = "SELECT p.plan_id AS planId,p.plan_id as planCode,s.id AS serviceId,c.id AS chargeId,p.charging_variant AS chargeVariant,p.price AS price," +
      		" p.discount_id AS discountId,p.price_region_id as priceregion FROM b_plan_pricing p, b_service s, b_charge_codes c " +
      		" WHERE p.charge_code = c.charge_code AND p.service_code = s.service_code AND p.id = ?";
 

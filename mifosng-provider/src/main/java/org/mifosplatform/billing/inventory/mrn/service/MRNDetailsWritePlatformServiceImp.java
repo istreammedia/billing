@@ -72,11 +72,12 @@ public class MRNDetailsWritePlatformServiceImp implements MRNDetailsWritePlatfor
 	
 	@Transactional
 	@Override
-	public CommandProcessingResult moveMRN(JsonCommand command, Long mrnId) {
+	public CommandProcessingResult moveMRN(JsonCommand command) {
 		context.authenticatedUser();
 		apiJsonDeserializer.validateForMove(command.json());
 		try {
 			MRNMoveDetailsData mrnMoveDetailsData = MRNMoveDetailsData.fromJson(command);
+			final Long mrnId = command.longValueOfParameterNamed("mrnId");
 			MRNDetails mrnDetails = mrnDetailsJpaRepository.findOne(mrnId);
 			List<Long> itemMasterId = mrnDetailsReadPlatformService.retriveItemMasterId(mrnId);
 			

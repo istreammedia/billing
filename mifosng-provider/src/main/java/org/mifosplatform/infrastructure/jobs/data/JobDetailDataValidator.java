@@ -73,4 +73,51 @@ public class JobDetailDataValidator {
         if (!dataValidationErrors.isEmpty()) { throw new PlatformApiDataValidationException(dataValidationErrors); }
     }
 
+	public void validateForCreate(String json) {
+        if (StringUtils.isBlank(json)) { throw new InvalidJsonException(); }
+
+        boolean atLeastOneParameterPassedForUpdate = false;
+        final Type typeOfMap = new TypeToken<Map<String, Object>>() {}.getType();
+        this.fromApiJsonHelper.checkForUnsupportedParameters(typeOfMap, json, SchedulerJobApiConstants.JOB_CREATE_REQUEST_DATA_PARAMETERS);
+        final JsonElement element = this.fromApiJsonHelper.parse(json);
+
+        final List<ApiParameterError> dataValidationErrors = new ArrayList<ApiParameterError>();
+
+        final DataValidatorBuilder baseDataValidator = new DataValidatorBuilder(dataValidationErrors)
+                .resource(SchedulerJobApiConstants.JOB_RESOURCE_NAME);
+        if (this.fromApiJsonHelper.parameterExists(SchedulerJobApiConstants.displayNameParamName, element)) {
+            atLeastOneParameterPassedForUpdate = true;
+            final String displayName = this.fromApiJsonHelper.extractStringNamed(SchedulerJobApiConstants.displayNameParamName, element);
+            baseDataValidator.reset().parameter(SchedulerJobApiConstants.displayNameParamName).value(displayName).notBlank();
+        }
+        
+        if (this.fromApiJsonHelper.parameterExists(SchedulerJobApiConstants.schedulerJobParamName, element)) {
+            atLeastOneParameterPassedForUpdate = true;
+            final String jobName = this.fromApiJsonHelper.extractStringNamed(SchedulerJobApiConstants.schedulerJobParamName, element);
+            baseDataValidator.reset().parameter(SchedulerJobApiConstants.schedulerJobParamName).value(jobName).notBlank();
+        }
+
+        if (this.fromApiJsonHelper.parameterExists(SchedulerJobApiConstants.cronExpressionParamName, element)) {
+            atLeastOneParameterPassedForUpdate = true;
+            final String cronExpression = this.fromApiJsonHelper.extractStringNamed(SchedulerJobApiConstants.cronExpressionParamName,
+                    element);
+            baseDataValidator.reset().parameter(SchedulerJobApiConstants.cronExpressionParamName).value(cronExpression).notBlank()
+                    .validateCronExpression();
+        }
+        if (this.fromApiJsonHelper.parameterExists(SchedulerJobApiConstants.jobActiveStatusParamName, element)) {
+            atLeastOneParameterPassedForUpdate = true;
+            final String status = this.fromApiJsonHelper.extractStringNamed(SchedulerJobApiConstants.jobActiveStatusParamName, element);
+            baseDataValidator.reset().parameter(SchedulerJobApiConstants.jobActiveStatusParamName).value(status).notBlank()
+                    .validateForBooleanValue();
+        }
+
+        if (!atLeastOneParameterPassedForUpdate) {
+            final Object forceError = null;
+            baseDataValidator.reset().anyOfNotNull(forceError);
+        }
+
+        throwExceptionIfValidationWarningsExist(dataValidationErrors);
+
+    }
+
 }

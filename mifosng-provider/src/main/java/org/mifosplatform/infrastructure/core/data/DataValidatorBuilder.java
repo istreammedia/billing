@@ -9,6 +9,8 @@ import java.math.BigDecimal;
 import java.text.ParseException;
 import java.util.Arrays;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import net.fortuna.ical4j.model.ValidationException;
 import net.fortuna.ical4j.model.property.RRule;
@@ -162,6 +164,27 @@ public class DataValidatorBuilder {
             }
 
             validationErrorCode.append(".cannot.be.blank");
+            StringBuilder defaultEnglishMessage = new StringBuilder("The parameter ").append(realParameterName).append(" is mandatory.");
+            ApiParameterError error = ApiParameterError.parameterError(validationErrorCode.toString(), defaultEnglishMessage.toString(),
+                    realParameterName, arrayIndex);
+            dataValidationErrors.add(error);
+        }
+        return this;
+    }
+    
+    public DataValidatorBuilder notBlankFoSerialNumber() {
+        if (value == null && ignoreNullValue) { return this; }
+
+        if (value == null || StringUtils.isBlank(value.toString())) {
+            String realParameterName = this.parameter;
+            StringBuilder validationErrorCode = new StringBuilder("SerialNumber").append(parameter);
+            if (this.arrayIndex != null && StringUtils.isNotBlank(arrayPart)) {
+                validationErrorCode.append(".").append(this.arrayPart);
+                realParameterName = new StringBuilder(parameter).append('[').append(this.arrayIndex).append("][").append(arrayPart)
+                        .append(']').toString();
+            }
+
+            validationErrorCode.append(" cannot be blank.");
             StringBuilder defaultEnglishMessage = new StringBuilder("The parameter ").append(realParameterName).append(" is mandatory.");
             ApiParameterError error = ApiParameterError.parameterError(validationErrorCode.toString(), defaultEnglishMessage.toString(),
                     realParameterName, arrayIndex);
@@ -594,5 +617,91 @@ public class DataValidatorBuilder {
 	        }
 	        return this;
 	    }
+	 
+	 public DataValidatorBuilder validateEmailExpresstion(final String email){
+	    	if(email!=null){
+	        	Pattern pattern = null;
+	        	Matcher matcher = null;
+	        	final String EMAIL_PATTERN = "^[_A-Za-z0-9-\\+]+(\\.[_A-Za-z0-9-]+)*@+[A-Za-z0-9-]+(\\.[A-Za-z0-9]+)*(\\.[A-Za-z]{2,})$";
+	        	pattern = Pattern.compile(EMAIL_PATTERN);
+	        	matcher = pattern.matcher(email);
+	        	boolean result = matcher.matches();
+	        	if(!result){
+	        		StringBuilder validationErrorCode = new StringBuilder("validation.msg.").append(resource).append(".").append(parameter).append(".value.").append(".is.not.valid.email");
+	    			StringBuilder defaultEnglishMessage = new StringBuilder("The parameter ").append(parameter).append(" value ").append(value).append(" is not valid email.");
+	    			ApiParameterError error = ApiParameterError.parameterError(validationErrorCode.toString(), defaultEnglishMessage.toString(),parameter, value,value);
+	    			dataValidationErrors.add(error);
+	        	}
+	        	return this;
+	        
+	    	}else{
+				return this;
+	    	}
+	    
+	    }
+	    
+	    
+	    public DataValidatorBuilder validateMobileNumber(final String phoneNumber){
+	    	if(phoneNumber !=null){        	
+	        	Pattern pattern = Pattern.compile("\\d{10}");
+	        	Matcher matcher = pattern.matcher(phoneNumber);
+	        	boolean result = matcher.matches();
+	        	
+	        	if(result){
+	        		return this;
+	        	}else{
+	        		StringBuilder validationErrorCode = new StringBuilder("validation.msg.").append(resource).append(".").append(parameter).append(".value.").append(".is.not.valid.contact.number");
+	    			StringBuilder defaultEnglishMessage = new StringBuilder("The parameter ").append(parameter).append(" value ").append(value).append(" is not valid contact number.");
+	    			ApiParameterError error = ApiParameterError.parameterError(validationErrorCode.toString(), defaultEnglishMessage.toString(),parameter, value,value);
+	    			dataValidationErrors.add(error);
+	        	}
+	        	return this;
+	        
+	    	}else{
+				return this;
+	    	}
+	    }
+	    
+	    public DataValidatorBuilder validateLandLineNumber(final String phoneNumber){
+	    	if(phoneNumber!=null){        	
+	        	Pattern pattern = Pattern.compile("\\d{3}-\\d{8}");
+	        	Matcher matcher = pattern.matcher(phoneNumber);
+	        	boolean result = matcher.matches();
+	        	if(result){
+	        		return this;
+	        	}else{
+	        		StringBuilder validationErrorCode = new StringBuilder("validation.msg.").append(resource).append(".").append(parameter).append(".value.").append(".is.not.valid.contact.number");
+	    			StringBuilder defaultEnglishMessage = new StringBuilder("The parameter ").append(parameter).append(" value ").append(value).append(" is not valid contact number.");
+	    			ApiParameterError error = ApiParameterError.parameterError(validationErrorCode.toString(), defaultEnglishMessage.toString(),parameter, value,value);
+	    			dataValidationErrors.add(error);
+	        	}
+	        	return this;
+	        
+	    	}else{
+				return this;
+	    	}
+	    }
+
+		public DataValidatorBuilder validateForZip(String zipCode) {
+			
+			if(zipCode!=null){
+		    	Pattern pattern = Pattern.compile("\\d{6}");
+		    	Matcher matcher = pattern.matcher(zipCode);
+		    	boolean result = matcher.matches();
+		    	if(result){
+		    		return this;
+		    	}else{
+		    		StringBuilder validationErrorCode = new StringBuilder("validation.msg.").append(resource).append(".").append(parameter).append(".value.").append(".is.not.valid.zip.code");
+					StringBuilder defaultEnglishMessage = new StringBuilder("The parameter ").append(parameter).append(" value ").append(value).append(" is not valid zip code.");
+					ApiParameterError error = ApiParameterError.parameterError(validationErrorCode.toString(), defaultEnglishMessage.toString(),parameter, value,value);
+					dataValidationErrors.add(error);
+		    	}
+		    	return this;
+			}else{
+				return this;
+	    	
+			}
+		}
+	 
     
 }

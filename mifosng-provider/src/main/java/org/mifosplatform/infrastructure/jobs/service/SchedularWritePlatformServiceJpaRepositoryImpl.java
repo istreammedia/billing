@@ -4,6 +4,8 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
+import org.mifosplatform.billing.scheduledjobs.domain.ScheduleJobs;
+import org.mifosplatform.billing.scheduledjobs.domain.ScheduledJobRepository;
 import org.mifosplatform.infrastructure.core.api.JsonCommand;
 import org.mifosplatform.infrastructure.core.data.CommandProcessingResult;
 import org.mifosplatform.infrastructure.core.data.CommandProcessingResultBuilder;
@@ -16,6 +18,7 @@ import org.mifosplatform.infrastructure.jobs.domain.SchedulerDetail;
 import org.mifosplatform.infrastructure.jobs.domain.SchedulerDetailRepository;
 import org.mifosplatform.infrastructure.jobs.exception.JobNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -29,15 +32,18 @@ public class SchedularWritePlatformServiceJpaRepositoryImpl implements Schedular
     private final SchedulerDetailRepository schedulerDetailRepository;
 
     private final JobDetailDataValidator dataValidator;
+    
+    private final ScheduledJobRepository scheduledJobRepository;
 
     @Autowired
     public SchedularWritePlatformServiceJpaRepositoryImpl(final ScheduledJobDetailRepository scheduledJobDetailsRepository,
             final ScheduledJobRunHistoryRepository scheduledJobRunHistoryRepository, final JobDetailDataValidator dataValidator,
-            final SchedulerDetailRepository schedulerDetailRepository) {
+            final SchedulerDetailRepository schedulerDetailRepository,final ScheduledJobRepository scheduledJobRepository) {
         this.scheduledJobDetailsRepository = scheduledJobDetailsRepository;
         this.scheduledJobRunHistoryRepository = scheduledJobRunHistoryRepository;
         this.schedulerDetailRepository = schedulerDetailRepository;
         this.dataValidator = dataValidator;
+        this.scheduledJobRepository=scheduledJobRepository;
     }
 
     @Override
@@ -117,6 +123,7 @@ public class SchedularWritePlatformServiceJpaRepositoryImpl implements Schedular
     public boolean processJobDetailForExecution(String jobKey, String triggerType) {
         boolean isStopExecution = false;
         final ScheduledJobDetail scheduledJobDetail = scheduledJobDetailsRepository.findByJobKeyWithLock(jobKey);
+        if(scheduledJobDetail!=null){
         if (scheduledJobDetail.isCurrentlyRunning()
                 || (triggerType == SchedulerServiceConstants.TRIGGER_TYPE_CRON && (scheduledJobDetail.getNextRunTime().after(new Date())))) {
             isStopExecution = true;
@@ -130,6 +137,67 @@ public class SchedularWritePlatformServiceJpaRepositoryImpl implements Schedular
         }
         scheduledJobDetailsRepository.save(scheduledJobDetail);
         return isStopExecution;
+        
+        }else{
+        	return isStopExecution;
+        }
     }
+
+	@Override
+	public CommandProcessingResult createNewJob(JsonCommand command) {
+		
+		try
+		{
+
+			dataValidator.validateForCreate(command.json());
+			
+			ScheduledJobDetail scheduledJobDetail=ScheduledJobDetail.fromJson(command);
+			
+			this.scheduledJobDetailsRepository.save(scheduledJobDetail);
+			
+			ScheduleJobs  scheduleJob=this.scheduledJobRepository.findByBatchName(scheduledJobDetail.getJobName());
+			
+			if(scheduleJob!=null){
+				scheduleJob.update();
+				this.scheduledJobRepository.save(scheduleJob);
+			}
+			
+			
+			
+			return new CommandProcessingResult(scheduledJobDetail.getId());
+			 
+			
+		}catch(DataIntegrityViolationException exception)
+		{
+			return  null;
+		}
+	}
+
+	@Override
+	public CommandProcessingResult deleteJob(Long jobId) {
+		
+		try
+		{
+			
+		    final ScheduledJobDetail scheduledJobDetail = findByJobId(jobId);
+	        if (scheduledJobDetail == null) { throw new JobNotFoundException(String.valueOf(jobId)); }
+	        
+	        this.scheduledJobDetailsRepository.delete(scheduledJobDetail);
+	        
+	        ScheduleJobs scheduleJobs=this.scheduledJobRepository.findByBatchName(scheduledJobDetail.getJobName());
+	        
+	        if(scheduleJobs!=null){
+	        	scheduleJobs.updateActiveState();
+	        	this.scheduledJobRepository.save(scheduleJobs);
+	        }
+	        
+	        
+	        return new CommandProcessingResult(jobId);	
+		}catch(DataIntegrityViolationException exception){
+			return null;
+		}
+		
+	
+	}
 
 }

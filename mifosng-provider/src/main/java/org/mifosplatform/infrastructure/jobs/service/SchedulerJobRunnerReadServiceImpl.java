@@ -6,12 +6,11 @@ import java.util.Date;
 import java.util.List;
 
 import org.joda.time.LocalDate;
+import org.mifosplatform.billing.scheduledjobs.data.ScheduleJobData;
 import org.mifosplatform.infrastructure.core.domain.JdbcSupport;
 import org.mifosplatform.infrastructure.core.service.Page;
 import org.mifosplatform.infrastructure.core.service.PaginationHelper;
-import org.mifosplatform.infrastructure.core.service.RoutingDataSource;
 import org.mifosplatform.infrastructure.core.service.TenantAwareRoutingDataSource;
-import org.mifosplatform.infrastructure.core.service.TomcatJdbcDataSourcePerTenantService;
 import org.mifosplatform.infrastructure.jobs.data.JobDetailData;
 import org.mifosplatform.infrastructure.jobs.data.JobDetailHistoryData;
 import org.mifosplatform.infrastructure.jobs.exception.JobNotFoundException;
@@ -171,4 +170,36 @@ public class SchedulerJobRunnerReadServiceImpl implements SchedulerJobRunnerRead
 
     }
 
+	@Override
+	public List<ScheduleJobData> retrieveJobDetails() {
+
+
+		
+		PlanMapper mapper = new PlanMapper();
+
+		String sql = "select " + mapper.schema();
+
+		return this.jdbcTemplate.query(sql, mapper, new Object[] {});
+
+	}
+
+	private static final class PlanMapper implements RowMapper<ScheduleJobData> {
+
+		public String schema() {
+			return " b.id as id,b.batch_name as batchName from b_schedule_jobs b where b.is_active = 'N'";
+
+		}
+
+		@Override
+		public ScheduleJobData mapRow(final ResultSet rs,
+				@SuppressWarnings("unused") final int rowNum)
+				throws SQLException {
+
+			Long id = rs.getLong("id");
+			String batchName = rs.getString("batchName");
+			
+			return new ScheduleJobData(id,batchName,null);
+
+		}
+	}
 }

@@ -146,7 +146,7 @@ public RegionReadPlatformServiceImpl(final TenantAwareRoutingDataSource dataSour
 					Long countryId=rs.getLong("countryId");
 					String stateName=rs.getString("stateName");
 					
-	                        return new RegionDetailsData(id,regionId,stateId,countryId,stateName);
+	                        return new RegionDetailsData(stateId,regionId,stateId,countryId,stateName);
 				}
 			}
 }

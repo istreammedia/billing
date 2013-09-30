@@ -30,7 +30,11 @@ public class UploadStatusData {
 		this.processRecords=processRecords;
 		this.processStatus=processStatus;
 		this.errorMessage=errorMessage;
+		if(processStatus!=null){
 	    this.flag=processStatus.equalsIgnoreCase("Processed")?true:false;
+		}else{
+			this.flag=false;
+		}
 	    this.unprocessRecords=unprocessRecords;
 		
 	}

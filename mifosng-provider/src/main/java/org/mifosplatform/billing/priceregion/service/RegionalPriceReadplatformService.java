@@ -10,8 +10,5 @@ public interface RegionalPriceReadplatformService {
 
 	PriceRegionData getTheClientRegionDetails(Long clientId);
 
-	void updateLoanSummaryDetails();
-
-	void updateLoanArrearsAgeingDetails();
 
 }

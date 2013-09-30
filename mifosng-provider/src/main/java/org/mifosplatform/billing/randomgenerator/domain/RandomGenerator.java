@@ -1,7 +1,7 @@
 package org.mifosplatform.billing.randomgenerator.domain;
 
+import java.math.BigDecimal;
 import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -19,6 +19,7 @@ import org.joda.time.LocalDate;
 import org.mifosplatform.infrastructure.core.api.JsonCommand;
 import org.springframework.data.jpa.domain.AbstractPersistable;
 
+@SuppressWarnings("serial")
 @Entity
 @Table(name = "b_pin_master", uniqueConstraints = @UniqueConstraint(name = "batch_name", columnNames = { "batch_name" }))
 public class RandomGenerator extends  AbstractPersistable<Long>  {
@@ -43,7 +44,7 @@ public class RandomGenerator extends  AbstractPersistable<Long>  {
 	private Long quantity;
 	
 	@Column(name = "serial_no")
-	private String serialNo;
+	private Long serialNo;
 
 	@Column(name = "pin_type")
 	private String pinType;
@@ -68,7 +69,7 @@ public RandomGenerator(){
 
 	public RandomGenerator(String batchName, String batchDescription,
 		Long length, String beginWith, String pinCategory, Long quantity,
-		String serialNo, String pinType, String pinValue, Date date) {	
+		Long serialNo, String pinType, String pinValue, Date date) {	
 	
 		this.batchName=batchName;
 		this.batchDescription=batchDescription;
@@ -85,19 +86,19 @@ public RandomGenerator(){
 
 
 	public static RandomGenerator fromJson(JsonCommand command) throws ParseException {
-		    final String batchName = command.stringValueOfParameterNamed("batchName");
+		  final String batchName = command.stringValueOfParameterNamed("batchName");
 		    final String batchDescription = command.stringValueOfParameterNamed("batchDescription");
-		    final Long length = command.longValueOfParameterNamed("length");
+		    final BigDecimal length = command.bigDecimalValueOfParameterNamed("length");
 		    final String beginWith = command.stringValueOfParameterNamed("beginWith");
 		    final String pinCategory = command.stringValueOfParameterNamed("pinCategory");
-		    final Long quantity = command.longValueOfParameterNamed("quantity");
-		    final String serialNo = command.stringValueOfParameterNamed("serialNo");
+		    final BigDecimal quantity = command.bigDecimalValueOfParameterNamed("quantity");
+		    final BigDecimal serialNo = command.bigDecimalValueOfParameterNamed("serialNo");
 		    final String pinType = command.stringValueOfParameterNamed("pinType");
-		    final String pinVal = command.stringValueOfParameterNamed("pinValue");
+		    final BigDecimal pinVal = command.bigDecimalValueOfParameterNamed("pinValue");
 		    final String pinExtention = command.stringValueOfParameterNamed("pinExtention");
 		    final LocalDate expiryDate = command.localDateValueOfParameterNamed("expiryDate");
-		    String pinValue=pinVal+" "+pinExtention;
-		return new RandomGenerator(batchName,batchDescription,length,beginWith,pinCategory,quantity,serialNo,pinType,pinValue,expiryDate.toDate());
+		    String pinValue=pinVal.toString()+" "+pinExtention;
+		return new RandomGenerator(batchName,batchDescription,length.longValue(),beginWith,pinCategory,quantity.longValue(),serialNo.longValue(),pinType,pinValue,expiryDate.toDate());
 	}
 	
 	public List<RandomGeneratorDetails> getRandomGeneratorDetails() {
@@ -141,7 +142,7 @@ public RandomGenerator(){
 	}
 
 
-	public String getSerialNo() {
+	public Long getSerialNo() {
 		return serialNo;
 	}
 

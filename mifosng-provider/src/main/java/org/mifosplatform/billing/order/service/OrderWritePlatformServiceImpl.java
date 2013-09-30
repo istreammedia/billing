@@ -8,9 +8,7 @@ import java.util.List;
 import org.joda.time.Days;
 import org.joda.time.LocalDate;
 import org.mifosplatform.billing.allocation.service.AllocationReadPlatformService;
-import org.mifosplatform.billing.association.data.HardwareAssociationData;
 import org.mifosplatform.billing.association.domain.PlanHardwareMapping;
-import org.mifosplatform.billing.association.service.HardwareAssociationReadplatformService;
 import org.mifosplatform.billing.association.service.HardwareAssociationWriteplatformService;
 import org.mifosplatform.billing.billingorder.service.ReverseInvoice;
 import org.mifosplatform.billing.contract.domain.Contract;
@@ -177,7 +175,7 @@ public class OrderWritePlatformServiceImpl implements OrderWritePlatformService 
 					  //If serviceId Not Exist
 					  
 				 OrderPrice price = new OrderPrice(data.getServiceId(),data.getChargeCode(), data.getCharging_variant(),
-						planPrice, null, data.getChagreType(),data.getChargeDuration(), data.getDurationType(),
+						data.getPrice(), null, data.getChagreType(),data.getChargeDuration(), data.getDurationType(),
 						billstartDate.toDate(), billEndDate,data.isTaxInclusive());
 				order.addOrderDeatils(price);
 				priceforHistory=priceforHistory.add(data.getPrice());
@@ -199,7 +197,7 @@ public class OrderWritePlatformServiceImpl implements OrderWritePlatformService 
 			this.orderRepository.save(order);
 
 			//Prepare a Requset For Order
-			String requstStatus = OrderStatusEnumaration.OrderStatusType(StatusTypeEnum.ACTIVE).getValue();
+			String requstStatus =UserActionStatusTypeEnum.ACTIVATION.toString();
 			
 			CommandProcessingResult processingResult=this.prepareRequestWriteplatformService.prepareNewRequest(order,plan,requstStatus);
 			
@@ -207,7 +205,7 @@ public class OrderWritePlatformServiceImpl implements OrderWritePlatformService 
 			Long userId=appUser.getId();
 			
 			//For Order History
-			OrderHistory orderHistory=new OrderHistory(order.getId(),new LocalDate(),new LocalDate(),processingResult.commandId(),"Active",userId);
+			OrderHistory orderHistory=new OrderHistory(order.getId(),new LocalDate(),new LocalDate(),processingResult.commandId(),requstStatus,userId);
 			this.orderHistoryRepository.save(orderHistory);
 			
           //For Plan And HardWare Association
@@ -349,7 +347,7 @@ public class OrderWritePlatformServiceImpl implements OrderWritePlatformService 
 	}
 
 	@Override
-	public CommandProcessingResult updateOrder(JsonCommand command,Long orderId ) {
+	public CommandProcessingResult disconnectOrder(JsonCommand command,Long orderId ) {
 		try {
 			
 			this.fromApiJsonDeserializer.validateForDisconnectOrder(command.json());
@@ -364,7 +362,7 @@ public class OrderWritePlatformServiceImpl implements OrderWritePlatformService 
 			Long orderStatus=null;
 	         if(plan.getProvisionSystem().equalsIgnoreCase("None")){
 				
-				orderStatus = OrderStatusEnumaration.OrderStatusType(StatusTypeEnum.DISCONNECTION).getId();
+				orderStatus = OrderStatusEnumaration.OrderStatusType(StatusTypeEnum.DISCONNECTED).getId();
 			}else{
 			
 				orderStatus = OrderStatusEnumaration.OrderStatusType(StatusTypeEnum.PENDING).getId();
@@ -372,10 +370,11 @@ public class OrderWritePlatformServiceImpl implements OrderWritePlatformService 
 	         
 	      //   this.reverseInvoice.reverseInvoiceServices(orderId, order.getClientId(),new LocalDate());
 			order.update(command,orderStatus);
+			order.setuerAction(UserActionStatusTypeEnum.DISCONNECTION.toString());
 			this.orderRepository.save(order);
 			
 			//for Prepare Request
-			String requstStatus ="DISCONNECTED";// OrderStatusEnumaration.OrderStatusType(StatusTypeEnum.DISCONNECTED).getValue();
+			String requstStatus =UserActionStatusTypeEnum.DISCONNECTION.toString();
 			CommandProcessingResult processingResult=this.prepareRequestWriteplatformService.prepareNewRequest(order,plan,requstStatus);
 			
 			//For Order History
@@ -390,7 +389,7 @@ public class OrderWritePlatformServiceImpl implements OrderWritePlatformService 
 			this.orderHistoryRepository.save(orderHistory);
  
 			//for TransactionHistory
-			transactionHistoryWritePlatformService.saveTransactionHistory(order.getClientId(), "Update Order", order.getStartDate(),
+			transactionHistoryWritePlatformService.saveTransactionHistory(order.getClientId(),"ORDER_"+UserActionStatusTypeEnum.DISCONNECTION.toString(), order.getStartDate(),
 					"Price:"+order.getPrice(),"PlanId:"+order.getPlanId(),"contarctPeriod:"+order.getContarctPeriod(),"services"+order.getServices(),"OrderID:"+order.getId(),"BillingAlign:"+order.getbillAlign());
 			return new CommandProcessingResult(Long.valueOf(order.getId()));
 		} catch (DataIntegrityViolationException dve) {
@@ -487,12 +486,13 @@ public class OrderWritePlatformServiceImpl implements OrderWritePlatformService 
 		   
 		 
 		 //  order.setStatus(OrderStatusEnumaration.OrderStatusType(StatusTypeEnum.ACTIVE).getId());
-		   this.orderRepository.save(order);
+		        order.setuerAction(UserActionStatusTypeEnum.RECONNECTION.toString());
+		      this.orderRepository.save(order);
 		   
 		 
 			  
 			//for Prepare Request
-			String requstStatus = OrderStatusEnumaration.OrderStatusType(StatusTypeEnum.ACTIVE).getValue();
+			String requstStatus = UserActionStatusTypeEnum.RECONNECTION.toString().toString();
 			CommandProcessingResult processingResult=this.prepareRequestWriteplatformService.prepareNewRequest(order,plan,requstStatus);
 			
 			//For Order History
@@ -502,7 +502,9 @@ public class OrderWritePlatformServiceImpl implements OrderWritePlatformService 
 			OrderHistory orderHistory=new OrderHistory(order.getId(),new LocalDate(),new LocalDate(),processingResult.commandId(),requstStatus,userId);
 			this.orderHistoryRepository.save(orderHistory);
 		
-			
+			//for TransactionHistory
+			transactionHistoryWritePlatformService.saveTransactionHistory(order.getClientId(),"ORDER_"+UserActionStatusTypeEnum.RECONNECTION.toString(), order.getStartDate(),
+					"Price:"+order.getPrice(),"PlanId:"+order.getPlanId(),"contarctPeriod:"+order.getContarctPeriod(),"services"+order.getServices(),"OrderID:"+order.getId(),"BillingAlign:"+order.getbillAlign());
 			
 		   return new CommandProcessingResult(order.getId());
 		  

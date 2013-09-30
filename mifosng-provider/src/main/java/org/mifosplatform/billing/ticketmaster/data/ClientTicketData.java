@@ -14,6 +14,7 @@ public class ClientTicketData {
     private final String userName;
     private final Long clientId;
 	private String timeElapsed;
+	private Object clientName;
 
 	
 	public ClientTicketData( Long id, String priority, String status, Long assignedTo, LocalDate ticketDate,
@@ -31,7 +32,7 @@ public class ClientTicketData {
 }
 	public ClientTicketData( Long id, String priority, String status, Long assignedTo, LocalDate ticketDate,
 			String lastComment,String problemDescription,String userName, Long clientId,
-			final String timeElapsed) {
+			final String timeElapsed, final String clientName) {
 	this.id=id;
 	this.priority=priority;
 	this.status=status;
@@ -42,6 +43,7 @@ public class ClientTicketData {
 	this.userName=userName;
 	this.clientId=clientId;
 	this.timeElapsed = timeElapsed;
+	this.clientName = clientName;
 }
 
 

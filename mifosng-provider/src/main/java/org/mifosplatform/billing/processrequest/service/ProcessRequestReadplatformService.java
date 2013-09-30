@@ -8,4 +8,6 @@ public interface ProcessRequestReadplatformService {
 
 	List<ProcessingDetailsData> retrieveProcessingDetails();
 
+	List<ProcessingDetailsData> retrieveUnProcessingDetails();
+
 }

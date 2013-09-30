@@ -10,5 +10,6 @@ public interface OrderWritePlatformService {
 	//CommandProcessingResult updateOrder(JsonCommand command);
 	CommandProcessingResult renewalClientOrder(JsonCommand command);
 	CommandProcessingResult reconnectOrder(Long entityId);
-	CommandProcessingResult updateOrder(JsonCommand command, Long orderId);
+//	CommandProcessingResult updateOrder(JsonCommand command, Long orderId);
+	CommandProcessingResult disconnectOrder(JsonCommand command, Long orderId);
 }

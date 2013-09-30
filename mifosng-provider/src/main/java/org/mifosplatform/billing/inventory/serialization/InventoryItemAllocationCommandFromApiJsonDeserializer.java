@@ -18,6 +18,7 @@ import org.mifosplatform.infrastructure.core.serialization.FromJsonHelper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.reflect.TypeToken;
 @Component
@@ -36,7 +37,7 @@ public class InventoryItemAllocationCommandFromApiJsonDeserializer {
 	  public void validateForCreate(final String json) {
 		  if(StringUtils.isBlank(json)){
 			  throw new InvalidJsonException();
-		  }
+		  }	
 		  
 		   final Type typeOfMap = new TypeToken<Map<String, Object>>() {}.getType();
 	       fromApiJsonHelper.checkForUnsupportedParameters(typeOfMap, json, supportedParameters);
@@ -46,21 +47,23 @@ public class InventoryItemAllocationCommandFromApiJsonDeserializer {
 	        final JsonElement element = fromApiJsonHelper.parse(json);
 	        
 	        
-	        final Long orderId = fromApiJsonHelper.extractLongNamed("orderId", element);
-	        final Long clientId = fromApiJsonHelper.extractLongNamed("clientId", element);
-	        final Long itemMasterId = fromApiJsonHelper.extractLongNamed("itemMasterId", element);
-	        final String serialNumber = fromApiJsonHelper.extractStringNamed("serialNumber", element);
-	        //final LocalDate allocationDate = fromApiJsonHelper.extra("allocationDate", element);
-	        final String status = fromApiJsonHelper.extractStringNamed("status", element);
+	        JsonArray allocationData = fromApiJsonHelper.extractJsonArrayNamed("serialNumber", element);
+	        int i=1;
+	        for(JsonElement j:allocationData){
+	        	final Long orderId = fromApiJsonHelper.extractLongNamed("orderId", j);
+	        	baseDataValidator.reset().parameter("orderId").value(orderId).notNull();
+	        	final Long clientId = fromApiJsonHelper.extractLongNamed("clientId", j);
+	        	baseDataValidator.reset().parameter("clientId").value(clientId).notNull().notBlank();
+	        	final Long itemMasterId = fromApiJsonHelper.extractLongNamed("itemMasterId", j);
+	        	baseDataValidator.reset().parameter("itemMasterId").value(itemMasterId).notBlank();
+	        	final String serialNumber = fromApiJsonHelper.extractStringNamed("serialNumber", j);
+	        	baseDataValidator.reset().parameter(""+i).value(serialNumber).notBlankFoSerialNumber();
+		        final String status = fromApiJsonHelper.extractStringNamed("status", j);
+		        baseDataValidator.reset().parameter("status").value(status).notNull();
+		        i++;
+	        }
 	        
-	        
-			baseDataValidator.reset().parameter("orderId").value(orderId).notNull();
-			baseDataValidator.reset().parameter("clientId").value(clientId).notNull().notBlank();
-			baseDataValidator.reset().parameter("serialNumber").value(serialNumber).notBlank().notNull();
-			baseDataValidator.reset().parameter("status").value(status).notNull();
-			baseDataValidator.reset().parameter("itemMasterId").value(itemMasterId).notBlank();
-			//baseDataValidator.reset().parameter("allocationDate").value(allocationDate).notNull();
-	        
+	          
 			throwExceptionIfValidationWarningsExist(dataValidationErrors);
 	  }
 	

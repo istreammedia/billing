@@ -22,8 +22,8 @@ public class OrderStatusEnumaration {
 			optionData = new EnumOptionData(StatusTypeEnum.INACTIVE.getValue().longValue(), codePrefix + StatusTypeEnum.INACTIVE.getCode(), "INACTIVE");
 			break;
 
-		case DISCONNECTION:
-			optionData = new EnumOptionData(StatusTypeEnum.DISCONNECTION.getValue().longValue(), codePrefix + StatusTypeEnum.DISCONNECTION.getCode(), "DISCONNECTION");
+		case DISCONNECTED:
+			optionData = new EnumOptionData(StatusTypeEnum.DISCONNECTED.getValue().longValue(), codePrefix + StatusTypeEnum.DISCONNECTED.getCode(), "DISCONNECTED");
 			break;
 			
 		case PENDING:

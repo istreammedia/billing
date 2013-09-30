@@ -299,7 +299,7 @@ public class PlanReadPlatformServiceImpl implements PlanReadPlatformService {
 			public String schema() {
 
 
-				return " mc.id as id,mc.code_value as codeValue from m_code m,m_code_value mc where m.id = mc.code_id and m.code_name='Provisioning' ";
+				return " mc.id as id,mc.code_value as codeValue from m_code m,m_code_value mc where m.id = mc.code_id and m.code_name='Provisioning' order by id";
 
 			}
 

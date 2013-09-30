@@ -17,6 +17,7 @@ import org.mifosplatform.infrastructure.core.serialization.FromJsonHelper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.reflect.TypeToken;
 
@@ -76,6 +77,27 @@ public class BillingMessageTemplateCommandFromApiJsonDeserializer {
 			baseDataValidator.reset().parameter("footer").value(footer)
 			.notBlank().notExceedingLengthOf(256);
 			
+			 final JsonArray messageArray=fromApiJsonHelper.extractJsonArrayNamed("messageParams",element);
+	         //baseDataValidator.reset().parameter("mediaassetAttributes").value(mediaassetAttributesArray).
+	   int messageArraySize=messageArray.size();
+	   if(messageArraySize>0){
+	          String[] message =null;
+	          message=new String[messageArray.size()];
+	         
+	       for(int i=0; i<messageArray.size();i++){
+	        message[i] =messageArray.get(i).toString();
+	        //JsonObject temp = mediaassetAttributesArray.getAsJsonObject();
+	        
+
+	       }
+	      //For Media Attributes
+	     for (String messageAttribute : message) {
+	     
+	          final JsonElement attributeElement = fromApiJsonHelper.parse(messageAttribute);
+	          final String messagevalue = fromApiJsonHelper.extractStringNamed("parameter", attributeElement);
+	          baseDataValidator.reset().parameter("parameterValue").value(messagevalue).notBlank();       
+	      }
+	   }
 
 			throwExceptionIfValidationWarningsExist(dataValidationErrors);
 		}

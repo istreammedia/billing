@@ -19,6 +19,6 @@ public class CreateMRNDetailsMoveCommandHandler implements NewCommandSourceHandl
 	
 	@Override
 	public CommandProcessingResult processCommand(JsonCommand command) {
-		return mrnDetailsWritePlatformService.moveMRN(command, command.entityId());
+		return mrnDetailsWritePlatformService.moveMRN(command);
 	}
 }

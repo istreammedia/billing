@@ -3,6 +3,7 @@ package org.mifosplatform.infrastructure.jobs.api;
 import java.util.List;
 
 import javax.ws.rs.Consumes;
+import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
@@ -16,6 +17,7 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 
 import org.apache.commons.lang.StringUtils;
+import org.mifosplatform.billing.scheduledjobs.data.ScheduleJobData;
 import org.mifosplatform.commands.domain.CommandWrapper;
 import org.mifosplatform.commands.service.CommandWrapperBuilder;
 import org.mifosplatform.commands.service.PortfolioCommandSourceWritePlatformService;
@@ -42,12 +44,13 @@ public class SchedulerJobApiResource {
     private final ApiRequestParameterHelper apiRequestParameterHelper;
     private final ToApiJsonSerializer<JobDetailData> toApiJsonSerializer;
     private final ToApiJsonSerializer<JobDetailHistoryData> jobHistoryToApiJsonSerializer;
+    private final ToApiJsonSerializer<ScheduleJobData> serializer;
     private final PortfolioCommandSourceWritePlatformService commandsSourceWritePlatformService;
 
     @Autowired
     public SchedulerJobApiResource(final SchedulerJobRunnerReadService schedulerJobRunnerReadService,
             final JobRegisterService jobRegisterService, final ToApiJsonSerializer<JobDetailData> toApiJsonSerializer,
-            final ApiRequestParameterHelper apiRequestParameterHelper,
+            final ApiRequestParameterHelper apiRequestParameterHelper,final ToApiJsonSerializer<ScheduleJobData> serializer,
             final ToApiJsonSerializer<JobDetailHistoryData> jobHistoryToApiJsonSerializer,
             final PortfolioCommandSourceWritePlatformService commandsSourceWritePlatformService) {
         this.schedulerJobRunnerReadService = schedulerJobRunnerReadService;
@@ -56,6 +59,19 @@ public class SchedulerJobApiResource {
         this.jobHistoryToApiJsonSerializer = jobHistoryToApiJsonSerializer;
         this.apiRequestParameterHelper = apiRequestParameterHelper;
         this.commandsSourceWritePlatformService = commandsSourceWritePlatformService;
+        this.serializer=serializer;
+    }
+    
+    
+    @POST
+    @Consumes({ MediaType.APPLICATION_JSON })
+    @Produces({ MediaType.APPLICATION_JSON })
+    public String addNewJob(final String apiRequestBodyAsJson) { 
+    	
+    	final CommandWrapper commandRequest=new CommandWrapperBuilder().addNewJob().withJson(apiRequestBodyAsJson).build();
+	   final CommandProcessingResult result=this.commandsSourceWritePlatformService.logCommandSource(commandRequest);
+	  return this.toApiJsonSerializer.serialize(result);
+	  
     }
 
     @GET
@@ -73,10 +89,24 @@ public class SchedulerJobApiResource {
     @Produces({ MediaType.APPLICATION_JSON })
     public String retrieveOne(@PathParam(SchedulerJobApiConstants.JOB_ID) final Long jobId, @Context final UriInfo uriInfo) {
         JobDetailData jobDetailData = this.schedulerJobRunnerReadService.retrieveOne(jobId);
+        
         final ApiRequestJsonSerializationSettings settings = this.apiRequestParameterHelper.process(uriInfo.getQueryParameters());
         return this.toApiJsonSerializer.serialize(settings, jobDetailData, SchedulerJobApiConstants.JOB_DETAIL_RESPONSE_DATA_PARAMETERS);
     }
 
+    
+    @GET
+    @Path("template")
+    @Consumes({ MediaType.APPLICATION_JSON })
+    @Produces({ MediaType.APPLICATION_JSON })
+    public String retrieveTemplateData(@Context final UriInfo uriInfo) {
+         List<ScheduleJobData> jobDetailData = this.schedulerJobRunnerReadService.retrieveJobDetails();
+        ScheduleJobData jobData=new ScheduleJobData(jobDetailData);
+        final ApiRequestJsonSerializationSettings settings = this.apiRequestParameterHelper.process(uriInfo.getQueryParameters());
+        return this.serializer.serialize(settings, jobData, SchedulerJobApiConstants.JOB_DETAIL_RESPONSE_DATA_PARAMETERS);
+    }
+
+    
     @GET
     @Path("{" + SchedulerJobApiConstants.JOB_ID + "}/" + SchedulerJobApiConstants.JOB_RUN_HISTORY)
     @Consumes({ MediaType.APPLICATION_JSON })
@@ -129,5 +159,16 @@ public class SchedulerJobApiResource {
     private boolean is(final String commandParam, final String commandValue) {
         return StringUtils.isNotBlank(commandParam) && commandParam.trim().equalsIgnoreCase(commandValue);
     }
+    
+    @DELETE
+	@Path("{jobId}")
+	@Consumes({MediaType.APPLICATION_JSON})
+	@Produces({MediaType.APPLICATION_JSON})
+	public String deleteSingleJob(@PathParam("jobId") final Long jobId) {
+	 final CommandWrapper commandRequest = new CommandWrapperBuilder().deleteJob(jobId).build();
+     final CommandProcessingResult result = this.commandsSourceWritePlatformService.logCommandSource(commandRequest);
+     return this.toApiJsonSerializer.serialize(result);
+
+	} 
 
 }

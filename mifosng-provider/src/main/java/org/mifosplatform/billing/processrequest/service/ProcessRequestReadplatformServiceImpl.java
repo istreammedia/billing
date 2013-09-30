@@ -45,7 +45,7 @@ public class ProcessRequestReadplatformServiceImpl implements ProcessRequestRead
 	        JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSourcePerTenantService.retrieveDataSource());
 			final ClientOrderMapper mapper = new ClientOrderMapper();
 
-			final String sql = "select " + mapper.clientOrderLookupSchema();
+			final String sql = "select " + mapper.processLookupSchema()+" where p.is_processed='Y' and p.is_notify='N'";
 
 			return jdbcTemplate.query(sql, mapper, new Object[] { });
 			} catch (EmptyResultDataAccessException e) {
@@ -56,9 +56,8 @@ public class ProcessRequestReadplatformServiceImpl implements ProcessRequestRead
 
 			private static final class ClientOrderMapper implements RowMapper<ProcessingDetailsData> {
 
-			public String clientOrderLookupSchema() {
-			return "p.id as id,p.order_id as orderId,p.provisioing_system as provisionigSys,p.request_type as requestType  FROM b_process_request p" +
-					" where p.is_processed='Y' and p.is_notify='N'";
+			public String processLookupSchema() {
+			return "p.id as id,p.order_id as orderId,p.provisioing_system as provisionigSys,p.request_type as requestType  FROM b_process_request p";
 			}
 
 			@Override
@@ -74,6 +73,27 @@ public class ProcessRequestReadplatformServiceImpl implements ProcessRequestRead
 			
 			return new ProcessingDetailsData(id, orderId,provisionigSys,requestType);
 			}
+			}
+
+			@Override
+			public List<ProcessingDetailsData> retrieveUnProcessingDetails() {
+
+				try {
+					
+					  
+			        final MifosPlatformTenant tenant = this.tenantDetailsService.loadTenantById("default");
+			        ThreadLocalContextUtil.setTenant(tenant);
+			        JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSourcePerTenantService.retrieveDataSource());
+					final ClientOrderMapper mapper = new ClientOrderMapper();
+
+					final String sql = "select " + mapper.processLookupSchema()+" where p.is_processed='N'";
+
+					return jdbcTemplate.query(sql, mapper, new Object[] { });
+					} catch (EmptyResultDataAccessException e) {
+					return null;
+					}
+
+					
 			}
 
 	

@@ -27,6 +27,6 @@ public class updateOrderCommandHandler implements NewCommandSourceHandler {
     @Override
     public CommandProcessingResult processCommand(final JsonCommand command) {
 
-        return this.writePlatformService.updateOrder(command,command.entityId());
+        return this.writePlatformService.disconnectOrder(command,command.entityId());
     }
 }

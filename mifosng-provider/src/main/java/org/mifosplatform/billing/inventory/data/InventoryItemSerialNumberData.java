@@ -1,31 +1,29 @@
 package org.mifosplatform.billing.inventory.data;
 
-import java.util.ArrayList;
 import java.util.List;
 
 
 public class InventoryItemSerialNumberData {
 
-	private String serialNumber;
-	private List<QuantityData> serialNumbers=new ArrayList<QuantityData>();
+	private String serialNumbers;
+
+	private List<String> serials;
 	private Long quantity;
 	private Long itemMasterId;
-	private List<InventoryItemSerialNumberData> datas;
 	
-	public InventoryItemSerialNumberData(List<QuantityData> serials,Long quantity,Long itemMasterId){
-
-		this.serialNumbers = serials;
+	public InventoryItemSerialNumberData(List<String> serials,Long quantity,Long itemMasterId){
+		this.serials = serials;
 		this.quantity = quantity;
 		this.itemMasterId = itemMasterId;
 	}
 	
 	
 	public String getSerialNumbers() {
-		return serialNumber;
+		return serialNumbers;
 	}
 
 	public void setSerialNumbers(String serialNumbers) {
-		this.serialNumber = serialNumbers;
+		this.serialNumbers = serialNumbers;
 	}
 
 	public InventoryItemSerialNumberData() {
@@ -33,18 +31,6 @@ public class InventoryItemSerialNumberData {
 	}
 	
 	public InventoryItemSerialNumberData(final String serialNumbers){
-		this.serialNumber = serialNumbers;
-	}
-
-
-	public InventoryItemSerialNumberData setSerialNumbers(List<QuantityData> itemSerialNumbers) {
-		serialNumbers=itemSerialNumbers;
-		return  this;
-	}
-
-
-	public void setListSerialNumber(List<InventoryItemSerialNumberData> datas) {
-		this.datas=datas;
-		
+		this.serialNumbers = serialNumbers;
 	}	
 }

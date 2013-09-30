@@ -145,7 +145,7 @@ public class RegionApiResource {
    	    List<CountryDetails> countrydata = this.addressReadPlatformService.retrieveCountries();
    	    regionData.setCountryDetails(countrydata);
    	    regionData.setStatesData(statesData);
-   	    regionData.setRegionDetails(regionDetails);
+   	   
    	    regionData.setCountryId(regionDetails.get(0).getCountryId());
    	    
    	    
@@ -162,6 +162,7 @@ public class RegionApiResource {
 					}
 				}
 			}
+			 regionData.setRegionDetails(regionDetails);
 	    final ApiRequestJsonSerializationSettings settings = apiRequestParameterHelper.process(uriInfo.getQueryParameters());
 	    return this.toApiJsonSerializer.serialize(settings, regionData, RESPONSE_DATA_PARAMETERS);
 	    

@@ -1,8 +1,15 @@
 package org.mifosplatform.billing.scheduledjobs.domain;
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.OneToMany;
 import javax.persistence.Table;
 
+import org.hibernate.annotations.LazyCollection;
+import org.hibernate.annotations.LazyCollectionOption;
 import org.springframework.data.jpa.domain.AbstractPersistable;
 
 @Entity
@@ -23,6 +30,12 @@ public class ScheduleJobs extends AbstractPersistable<Long>{
 	private char status;
 	
 	
+	 @LazyCollection(LazyCollectionOption.FALSE)
+		@OneToMany(cascade = CascadeType.ALL, mappedBy = "jobDetail", orphanRemoval = true)
+		private List<JobParameters> details = new ArrayList<JobParameters>();
+	
+	@Column(name = "is_active")
+	private char isActive;
 	 public  ScheduleJobs() {
 		// TODO Auto-generated constructor stub
 	}
@@ -68,17 +81,30 @@ public class ScheduleJobs extends AbstractPersistable<Long>{
 	}
 
 
-	
-
-	
-
-
-	
-	
-
+	public void update() {
+		this.isActive='Y';
 		
-	 
-	 
+	}
+
+
+	public void updateActiveState() {
+		
+		if(this.isActive == 'Y'){
+			this.isActive = 'N';
+		}
+		
+	}
+
+
+	public List<JobParameters> getDetails() {
+		return details;
+	}
+
+
+	public char getIsActive() {
+		return isActive;
+	}
+
 			
 	}
  

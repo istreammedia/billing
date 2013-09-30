@@ -169,7 +169,7 @@ public List<BillingMessageData> retrieveData(Long id,String jsondata,
 	
 	BillingMessageDataMapper mapper = new BillingMessageDataMapper();
 
-	String sql = "select "+json;
+	String sql = json;
 
 	return this.jdbcTemplate.query(sql, mapper, new Object[] {});
 	

@@ -819,4 +819,12 @@ public class CommandWrapper {
 		 public boolean isSchedulerResource() {
 		        return this.entityName.equalsIgnoreCase("SCHEDULER");
 		    }
+
+		public boolean isEntitlementResource() {
+			return this.entityName.equalsIgnoreCase("Entitlement");
+		}
+		public boolean isCreateEntitlement() {
+			return this.actionName.equalsIgnoreCase("CREATE") && this.entityName.equalsIgnoreCase("Entitlement");
+			
+		}
 }

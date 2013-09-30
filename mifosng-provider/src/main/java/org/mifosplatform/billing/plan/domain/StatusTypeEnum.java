@@ -5,7 +5,7 @@ public enum StatusTypeEnum {
 
 	ACTIVE(1, "CategoryType.active"), //
 	INACTIVE(2, "CategoryType.inactive"),
-	DISCONNECTION(3, "CategoryType.disconnected"),
+	DISCONNECTED(3, "CategoryType.disconnected"),
 	PENDING(4,"CategoryType.pending"),
 	INVALID(5, "CategoryType.invalid");
 
@@ -38,7 +38,7 @@ public enum StatusTypeEnum {
 			break;
 
 		case 3:
-			repaymentFrequencyType = StatusTypeEnum.DISCONNECTION;
+			repaymentFrequencyType = StatusTypeEnum.DISCONNECTED;
 			break;
 			
 		case 4:

@@ -122,12 +122,12 @@ public class MRNDetailsApiResource {
 		return apiJsonSerializer.serialize(result);
 	}
 	
-	@Path("movemrn/{mrnId}")
+	@Path("movemrn")
 	@POST
 	@Produces({MediaType.APPLICATION_JSON})
 	@Consumes({MediaType.APPLICATION_JSON})
-	public String moveMRN(@PathParam("mrnId") final Long mrnId, final String jsonRequestBody){
-		final CommandWrapper command = new CommandWrapperBuilder().moveMRN(mrnId).withJson(jsonRequestBody).build();
+	public String moveMRN(final String jsonRequestBody){
+		final CommandWrapper command = new CommandWrapperBuilder().moveMRN().withJson(jsonRequestBody).build();
 		final CommandProcessingResult result = portfolioCommandSourceWritePlatformService.logCommandSource(command);
 		return apiJsonSerializer.serialize(result);
 	}

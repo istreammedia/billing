@@ -10,6 +10,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.commons.lang.StringUtils;
+import org.joda.time.LocalDate;
 import org.mifosplatform.infrastructure.core.data.ApiParameterError;
 import org.mifosplatform.infrastructure.core.data.DataValidatorBuilder;
 import org.mifosplatform.infrastructure.core.exception.InvalidJsonException;
@@ -27,7 +28,7 @@ import com.google.gson.JsonElement;
 public class MRNDetailsCommandFromApiJsonDeserializer {
 
 	private FromJsonHelper fromJsonHelper;
-	private final Set<String> supportedParams = new HashSet<String>(Arrays.asList("requestedDate","itemDescription","fromOffice","toOffice","orderdQuantity","status","locale","dateFormat","mrnId","serialNumber","movedDate"));
+	private final Set<String> supportedParams = new HashSet<String>(Arrays.asList("requestedDate","requestedTime","itemDescription","fromOffice","toOffice","orderdQuantity","status","locale","dateFormat","mrnId","serialNumber","movedDate"));
 	@Autowired
 	public MRNDetailsCommandFromApiJsonDeserializer(final FromJsonHelper fromJsonHelper) {
 		this.fromJsonHelper = fromJsonHelper;
@@ -68,6 +69,8 @@ public class MRNDetailsCommandFromApiJsonDeserializer {
 		
 		//final Integer oQ = fromJsonHelper.extractIntegerWithLocaleNamed("orderdQuantity", element);
 		final BigDecimal orderdQuantity = fromJsonHelper.extractBigDecimalNamed("orderdQuantity", element, fromJsonHelper.extractLocaleParameter(element.getAsJsonObject()));
+		final LocalDate requestedDate = fromJsonHelper.extractLocalDateNamed("requestedDate", element); 
+		
 		baseValidatorBuilder.reset().parameter("fromOffice").value(fromOffice).notBlank().notExceedingLengthOf(10);
 		baseValidatorBuilder.reset().parameter("toOffice").value(toOffice).notBlank().notExceedingLengthOf(10);
 		baseValidatorBuilder.reset().parameter("orderdQuantity").value(orderdQuantity).notBlank().notExceedingLengthOf(10).positiveAmount();
@@ -92,11 +95,8 @@ public void validateForMove(String json){
 		
 		
 		final Integer md = fromJsonHelper.extractIntegerWithLocaleNamed("mrnId", element);
-		Long mrnId = null;
-		if(md!=null){
-			mrnId = md.longValue();
-			baseValidatorBuilder.reset().parameter("mrnId").value(mrnId).notBlank().notExceedingLengthOf(10).integerGreaterThanZero();
-		}
+		
+			baseValidatorBuilder.reset().parameter("mrnId").value(md).notNull();
 		
 		final String serialNumber = fromJsonHelper.extractStringNamed("serialNumber", element);
 		baseValidatorBuilder.reset().parameter("serialNumber").value(serialNumber).notBlank().notExceedingLengthOf(100);

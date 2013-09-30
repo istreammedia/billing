@@ -71,6 +71,8 @@ public class RegionData {
 		this.regionDetails=regionDetails;
 		if(regionDetails.get(0).getStateId() == 0){
 			this.isDefault='Y';
+			this.regionDetails.clear();
+			
 		}
 		
 	}

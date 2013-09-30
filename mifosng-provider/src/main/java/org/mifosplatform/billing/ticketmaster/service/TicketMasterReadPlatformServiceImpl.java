@@ -277,7 +277,7 @@ public class TicketMasterReadPlatformServiceImpl  implements TicketMasterReadPla
 			private static final class UserTicketsMapper implements RowMapper<ClientTicketData> {
 				
 				public String userTicketSchema() {
-					return "tckt.id as id, tckt.priority as priority, tckt.status as status, tckt.ticket_date as ticketDate, tckt.assigned_to as userId,"+
+					return "tckt.client_id as clientId,(select display_name from m_client where id = tckt.client_id) as clientName, tckt.priority as priority, tckt.status as status, tckt.ticket_date as ticketDate, tckt.assigned_to as userId,"+
 							""+"(Select comments from b_ticket_details x where tckt.id=x.ticket_id and x.id=(select max(id) from b_ticket_details y where tckt.id=y.ticket_id)) as LastComment,"+
 							""+"(select mcv.code_value from m_code_value mcv where mcv.id = tckt.problem_code) as problemDescription,"+
 							""+"(select user.username from m_appuser user where tckt.assigned_to = user.id) as assignedTo,"+
@@ -287,7 +287,7 @@ public class TicketMasterReadPlatformServiceImpl  implements TicketMasterReadPla
 
 				@Override
 				public ClientTicketData mapRow(ResultSet rs, int rowNum) throws SQLException {
-					final Long id = rs.getLong("id");
+					
 					final String priority = rs.getString("priority");
 					final String status = rs.getString("status");
 					final Long userId = rs.getLong("userId");
@@ -297,8 +297,9 @@ public class TicketMasterReadPlatformServiceImpl  implements TicketMasterReadPla
 					final String assignedTo = rs.getString("assignedTo");
 					final Long clientId = rs.getLong("clientId");
 					final String timeElapsed = rs.getString("timeElapsed");
+					final String clientName = rs.getString("clientName");
 					
-					return new ClientTicketData(id, priority, status, userId, ticketDate, lastComment, problemDescription, assignedTo, clientId,timeElapsed);
+					return new ClientTicketData(0L, priority, status, userId, ticketDate, lastComment, problemDescription, assignedTo, clientId,timeElapsed,clientName);
 				}
 				
 			}

@@ -122,8 +122,9 @@ public class RegionWriteplatformServiceImpl implements RegionWriteplatformServic
 			    for(int i=0; i<array.size();i++){
 			    	states[i] =array.get(i).getAsString();
 			    }
-			             regionMaster.getDetails().clear();
+			           
 				 for (String stateId : states) {
+					  
 		                final Long id = Long.valueOf(stateId);
 		                final Long countryId = command.longValueOfParameterNamed("countryId");
 		                RegionDetails regionDetails=new RegionDetails(countryId, id);

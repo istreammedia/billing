@@ -1,8 +1,11 @@
 package org.mifosplatform.billing.clientprospect.serialization;
 
 import java.lang.reflect.Type;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -62,6 +65,7 @@ public class ClientProspectCommandFromApiJsonDeserializer {
 	        if(fromApiJsonHelper.parameterExists("address", element)){
 	        	baseDataValidator.reset().parameter("address").value(fromApiJsonHelper.extractStringNamed("address", element)).notBlank();
 	        }
+	        
 	        if(fromApiJsonHelper.parameterExists("streetArea", element)){
 	        	baseDataValidator.reset().parameter("streetArea").value(fromApiJsonHelper.extractStringNamed("streetArea", element)).notBlank();
 	        }
@@ -75,19 +79,39 @@ public class ClientProspectCommandFromApiJsonDeserializer {
 	        	baseDataValidator.reset().parameter("country").value(fromApiJsonHelper.extractStringNamed("country", element)).notBlank();
 	        }
 	        if(fromApiJsonHelper.parameterExists("zipCode", element)){
-	        	baseDataValidator.reset().parameter("zipCode").value(fromApiJsonHelper.extractStringNamed("zipCode", element)).notBlank();
+	        	baseDataValidator.reset().parameter("zipCode").value(fromApiJsonHelper.extractStringNamed("zipCode", element)).notBlank().validateForZip(fromApiJsonHelper.extractStringNamed("zipCode", element));
 	        }
-	        if(fromApiJsonHelper.parameterExists("notes", element)){
-	        	baseDataValidator.reset().parameter("notes").value(fromApiJsonHelper.extractStringNamed("notes", element)).notBlank().notExceedingLengthOf(255);
+	        if(fromApiJsonHelper.parameterExists("note", element)){
+	        	baseDataValidator.reset().parameter("note").value(fromApiJsonHelper.extractStringNamed("note", element)).notBlank().notExceedingLengthOf(255);
 	        }
 	        
 	        if(fromApiJsonHelper.parameterExists("email", element)){
-	        	baseDataValidator.reset().parameter("email").value(fromApiJsonHelper.extractStringNamed("email", element)).notBlank();
+	        	baseDataValidator.reset().parameter("email").value(fromApiJsonHelper.extractStringNamed("email", element)).notBlank().validateEmailExpresstion(fromApiJsonHelper.extractStringNamed("email", element));
 	        }
 	        
 	        if(fromApiJsonHelper.parameterExists("mobileNumber", element)){
-	        	baseDataValidator.reset().parameter("mobileNumber").value(fromApiJsonHelper.extractStringNamed("mobileNumber", element)).notBlank();
+	        	baseDataValidator.reset().parameter("mobileNumber").value(fromApiJsonHelper.extractStringNamed("mobileNumber", element)).notBlank().validateMobileNumber(fromApiJsonHelper.extractStringNamed("mobileNumber", element));
 	        }
+	        
+	        if(fromApiJsonHelper.parameterExists("homePhoneNumber", element)){
+	        	baseDataValidator.reset().parameter("homePhoneNumber").value(fromApiJsonHelper.extractStringNamed("homePhoneNumber", element)).notBlank().validateLandLineNumber(fromApiJsonHelper.extractStringNamed("homePhoneNumber", element));
+	        }
+	        if(fromApiJsonHelper.parameterExists("workPhoneNumber", element)){
+	        	baseDataValidator.reset().parameter("workPhoneNumber").value(fromApiJsonHelper.extractStringNamed("workPhoneNumber", element)).notBlank().validateLandLineNumber(fromApiJsonHelper.extractStringNamed("workPhoneNumber", element));
+	        }
+	        
+	        
+	        if(fromApiJsonHelper.parameterExists("preferredCallingTime", element)){
+				String startDateString = fromApiJsonHelper.extractStringNamed("preferredCallingTime", element);
+				DateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+				Date preferredCallingTime  = null;
+				try {
+					preferredCallingTime = df.parse(startDateString);
+				} catch (Exception e) {
+					baseDataValidator.reset().parameter("preferredCallingTime").value(preferredCallingTime).notBlank();	
+				}
+				
+			}
 	        
 			
 			

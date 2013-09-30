@@ -52,6 +52,7 @@ public final class ContractCommandFromApiJsonDeserializer {
         baseDataValidator.reset().parameter("subscriptionPeriod").value(subscriptionPeriod).notBlank().notExceedingLengthOf(15);
         final Long units = fromApiJsonHelper.extractLongNamed("units", element);
         baseDataValidator.reset().parameter("units").value(units).notBlank();
+        
         final String subscriptionType = fromApiJsonHelper.extractStringNamed("subscriptionType", element);
         baseDataValidator.reset().parameter("subscriptionType").value(subscriptionType).notBlank();
 

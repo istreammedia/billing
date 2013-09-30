@@ -62,7 +62,7 @@ public class ProcessRequestSheduledJob  {
                             	    	
                     System.out.println("Processing  Request Jobs are "+processingJobs);
                     System.out.println("Running Job Processing Request"+new Date());
-                    this.sheduleJobWritePlatformService.runSheduledJobs();
+               //     this.sheduleJobWritePlatformService.runSheduledJobs();
                     System.out.println("Finishing Job Processing Request"+new Date());
 	    }
 			

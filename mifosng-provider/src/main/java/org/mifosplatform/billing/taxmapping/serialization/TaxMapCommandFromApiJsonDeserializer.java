@@ -62,7 +62,7 @@ public final class TaxMapCommandFromApiJsonDeserializer {
 		final BigDecimal rate = command.bigDecimalValueOfParameterNamed("rate"); 
 
 		baseDataValidator.reset().parameter("taxCode").value(taxCode).notBlank().notExceedingLengthOf(10);
-		baseDataValidator.reset().parameter("startDate").value(startDate);
+		baseDataValidator.reset().parameter("startDate").value(startDate).notBlank();
 		if(type.contains("-1"))
 			baseDataValidator.reset().parameter("type").value(type).notBlank().notExceedingLengthOf(15).zeroOrPositiveAmount();
 		else

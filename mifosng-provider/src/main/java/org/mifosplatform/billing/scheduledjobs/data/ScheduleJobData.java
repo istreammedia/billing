@@ -1,17 +1,27 @@
 package org.mifosplatform.billing.scheduledjobs.data;
 
+import java.util.List;
+
 public class ScheduleJobData {
 	
 	private final Long id;
-	private final String processType;
+	private final String batchName;
 	private final String query;
-	private String processParam;
+	private List<ScheduleJobData> jobDetailData;
+	
 
-	public ScheduleJobData(Long id, String processType, String query, String processParam) {
+	public ScheduleJobData(Long id, String batchName, String query) {
           this.id=id;
-          this.processType=processType;
+          this.batchName=batchName;
           this.query=query;
-          this.processParam=processParam;
+          
+	}
+
+	public ScheduleJobData(List<ScheduleJobData> jobDetailData) {
+	this.jobDetailData=jobDetailData;
+	  this.id=null;
+      this.batchName=null;
+      this.query=null;
 	}
 
 	/**
@@ -21,26 +31,17 @@ public class ScheduleJobData {
 		return id;
 	}
 
-	/**
-	 * @return the processType
-	 */
-	public String getProcessType() {
-		return processType;
+	public String getBatchName() {
+		return batchName;
 	}
 
-	/**
-	 * @return the query
-	 */
 	public String getQuery() {
 		return query;
 	}
 
 	/**
-	 * @return the processParam
+	 * @return the processType
 	 */
-	public String getProcessParam() {
-		return processParam;
-	}
-
+	
 	
 }

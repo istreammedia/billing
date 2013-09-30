@@ -116,7 +116,7 @@ public final class MediaAssetCommandFromApiJsonDeserializer {
         baseDataValidator.reset().parameter("mediaAssetLocations").value(mediaAssetLocations).arrayNotEmpty();*/
         
         final JsonArray mediaAssetLocationsArray=fromApiJsonHelper.extractJsonArrayNamed("mediaAssetLocations",element);
-      baseDataValidator.reset().parameter("mediaAssetLocations").value(mediaAssetLocationsArray).arrayNotEmpty();
+    //  baseDataValidator.reset().parameter("mediaAssetLocations").value(mediaAssetLocationsArray).arrayNotEmpty();
         String[] mediaAssetLocations =null;
         mediaAssetLocations=new String[mediaAssetLocationsArray.size()];
         int mediaassetLocationSize=mediaAssetLocationsArray.size();

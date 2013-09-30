@@ -12,169 +12,318 @@ import org.mifosplatform.billing.message.service.BillingMessageDataWritePlatform
 import org.mifosplatform.billing.order.data.OrderData;
 import org.mifosplatform.billing.order.service.OrderReadPlatformService;
 import org.mifosplatform.billing.order.service.OrderWritePlatformService;
+import org.mifosplatform.billing.preparerequest.data.PrepareRequestData;
+import org.mifosplatform.billing.preparerequest.service.PrepareRequestReadplatformService;
+import org.mifosplatform.billing.processrequest.data.ProcessingDetailsData;
+import org.mifosplatform.billing.processrequest.domain.ProcessRequest;
+import org.mifosplatform.billing.processrequest.domain.ProcessRequestRepository;
+import org.mifosplatform.billing.processrequest.service.ProcessRequestReadplatformService;
 import org.mifosplatform.billing.processscheduledjobs.service.SheduleJobReadPlatformService;
 import org.mifosplatform.billing.processscheduledjobs.service.SheduleJobWritePlatformService;
+import org.mifosplatform.billing.scheduledjobs.ProcessRequestWriteplatformService;
+import org.mifosplatform.billing.scheduledjobs.data.JobParameterData;
 import org.mifosplatform.billing.scheduledjobs.data.ScheduleJobData;
 import org.mifosplatform.billing.scheduledjobs.domain.ScheduleJobs;
 import org.mifosplatform.billing.scheduledjobs.domain.ScheduledJobRepository;
 import org.mifosplatform.infrastructure.core.api.JsonCommand;
 import org.mifosplatform.infrastructure.core.serialization.FromJsonHelper;
 import org.mifosplatform.infrastructure.jobs.annotation.CronTarget;
+import org.mifosplatform.infrastructure.jobs.domain.ScheduledJobDetailRepository;
 import org.mifosplatform.infrastructure.jobs.service.JobName;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.google.gson.JsonElement;
 
 @Service
-public class SheduleJobWritePlatformServiceImpl  implements SheduleJobWritePlatformService{
+public class SheduleJobWritePlatformServiceImpl implements	SheduleJobWritePlatformService {
+
+	private final SheduleJobReadPlatformService sheduleJobReadPlatformService;
+	private final InvoiceClient invoiceClient;
+	private final ScheduledJobRepository scheduledJobRepository;
+	private final BillingMasterApiResourse billingMasterApiResourse;
+	private final OrderWritePlatformService orderWritePlatformService;
+	private final FromJsonHelper fromApiJsonHelper;
+	private final OrderReadPlatformService orderReadPlatformService;
+	private final BillingMessageDataWritePlatformService billingMessageDataWritePlatformService;
+	private final PrepareRequestReadplatformService prepareRequestReadplatformService;
+	private final ProcessRequestReadplatformService processRequestReadplatformService;
+	private final ProcessRequestWriteplatformService processRequestWriteplatformService;
+	private final ProcessRequestRepository processRequestRepository;
+	private final ScheduledJobDetailRepository scheduledJobDetailRepository;
+	
+
+	@Autowired
+	public SheduleJobWritePlatformServiceImpl(final InvoiceClient invoiceClient,final SheduleJobReadPlatformService sheduleJobReadPlatformService,
+			final ScheduledJobRepository scheduledJobRepository,final BillingMasterApiResourse billingMasterApiResourse,final ProcessRequestRepository processRequestRepository,
+			final OrderWritePlatformService orderWritePlatformService,final FromJsonHelper fromApiJsonHelper,final OrderReadPlatformService orderReadPlatformService,
+			final BillingMessageDataWritePlatformService billingMessageDataWritePlatformService,final PrepareRequestReadplatformService prepareRequestReadplatformService,
+			final ProcessRequestReadplatformService processRequestReadplatformService,final ProcessRequestWriteplatformService processRequestWriteplatformService,
+			final ScheduledJobDetailRepository scheduledJobDetailRepository)
+	{
+		this.sheduleJobReadPlatformService = sheduleJobReadPlatformService;
+		this.invoiceClient = invoiceClient;
+		this.scheduledJobRepository = scheduledJobRepository;
+		this.billingMasterApiResourse = billingMasterApiResourse;
+		this.orderWritePlatformService = orderWritePlatformService;
+		this.fromApiJsonHelper = fromApiJsonHelper;
+		this.orderReadPlatformService = orderReadPlatformService;
+		this.billingMessageDataWritePlatformService = billingMessageDataWritePlatformService;
+		this.prepareRequestReadplatformService = prepareRequestReadplatformService;
+		this.processRequestReadplatformService = processRequestReadplatformService;
+		this.processRequestWriteplatformService = processRequestWriteplatformService;
+		this.processRequestRepository = processRequestRepository;
+		this.scheduledJobDetailRepository=scheduledJobDetailRepository;
+	}
 
 	
-	  private final SheduleJobReadPlatformService sheduleJobReadPlatformService;
-	  private final InvoiceClient  invoiceClient;
-	  private final ScheduledJobRepository scheduledJobRepository;
-	  private  final BillingMasterApiResourse billingMasterApiResourse;  
-	  private final OrderWritePlatformService orderWritePlatformService;
-	  private final FromJsonHelper fromApiJsonHelper;
-	  private final OrderReadPlatformService orderReadPlatformService;
-	  private final BillingMessageDataWritePlatformService billingMessageDataWritePlatformService;
-	    
-	
 
-	    @Autowired
-	    public SheduleJobWritePlatformServiceImpl(final InvoiceClient invoiceClient,final SheduleJobReadPlatformService sheduleJobReadPlatformService,
-	            final ScheduledJobRepository scheduledJobRepository,final BillingMasterApiResourse billingMasterApiResourse,
-	            final OrderWritePlatformService orderWritePlatformService,final FromJsonHelper fromApiJsonHelper,
-	            final OrderReadPlatformService orderReadPlatformService,final BillingMessageDataWritePlatformService billingMessageDataWritePlatformService ) {
-	            this.sheduleJobReadPlatformService=sheduleJobReadPlatformService;
-	            this.invoiceClient=invoiceClient;
-	            this.scheduledJobRepository=scheduledJobRepository;
-	            this.billingMasterApiResourse=billingMasterApiResourse;
-	            this.orderWritePlatformService=orderWritePlatformService;
-	            this.fromApiJsonHelper=fromApiJsonHelper;
-	            this.orderReadPlatformService=orderReadPlatformService;
-	            this.billingMessageDataWritePlatformService=billingMessageDataWritePlatformService;
-	    }
-	  
-		@Override
-		public void runSheduledJobs() {
+	@Transactional
+	@Override
+	@CronTarget(jobName = JobName.INVOICE)
+	public void processInvoice() {
+
+	try
+	{
+		
+		JobParameterData data=this.sheduleJobReadPlatformService.getJobParameters(JobName.INVOICE.toString());
+		
+		if(data!=null){
+			
+		    	List<ScheduleJobData> sheduleDatas = this.sheduleJobReadPlatformService.retrieveSheduleJobDetails(data.getBatchName());
+		    	    	 
+		    	    	 for (ScheduleJobData scheduleJobData : sheduleDatas) {
+
+		    	 			List<Long> clientIds = this.sheduleJobReadPlatformService.getClientIds(scheduleJobData.getQuery());
+		    	 			
+		    	 			// Get the Client Ids
+		    	 			for (Long clientId : clientIds) {
+		    	 				try {
+
+		    	 					this.invoiceClient.invoicingSingleClient(clientId,data.getProcessDate());
+
+		    	 				} catch (Exception dve) {
+		    	 					handleCodeDataIntegrityIssues(null, dve);
+		    	 				}
+		    	 			}
+		    	 			ScheduleJobs scheduleJob = this.scheduledJobRepository
+		    	 					.findOne(scheduleJobData.getId());
+		    	 			scheduleJob.setStatus('Y');
+		    	 			this.scheduledJobRepository.save(scheduleJob);
+		    	 		}
+
+		    	 		System.out.println("Invoices are Generated.....");
+		    	
+		    }
+	
+	}catch(DataIntegrityViolationException exception)
+	{
+		exception.printStackTrace();
+	}
+	
+	
+	}
+
+	private void handleCodeDataIntegrityIssues(Object object, Exception dve) {
+		// TODO Auto-generated method stub
+
+	}
+
+	@Transactional
+	@Override
+	@CronTarget(jobName = JobName.REQUESTOR)
+	public void processRequest() {
+
+		try {
+			
+			System.out.println("Processing Request Details.......");
+			
+			List<PrepareRequestData> data = this.prepareRequestReadplatformService.retrieveDataForProcessing();
+
+			for (PrepareRequestData requestData : data) {
+
+				this.prepareRequestReadplatformService.processingClientDetails(requestData);
+			}
+
+			System.out.println(" Requestor Job is Completed....");
+
+		} catch (DataIntegrityViolationException exception) {
+
+		}
+	}
+
+	@Transactional
+	@Override
+	@CronTarget(jobName = JobName.RESPONSOR)
+	public void processResponse() {
+
+		try {
+			System.out.println("Processing Response Details.......");
+			
+			List<ProcessingDetailsData> processingDetails = this.processRequestReadplatformService.retrieveProcessingDetails();
+
+			for (ProcessingDetailsData detailsData : processingDetails) {
+
+				this.processRequestWriteplatformService.notifyProcessingDetails(detailsData);
+			}
+			System.out.println("Responsor Job is Completed...");
+			
+		} catch (DataIntegrityViolationException exception) {
+
+		}
+	}
+
+	@Transactional
+	@Override
+	@CronTarget(jobName = JobName.SIMULATOR)
+	public void processSimulator() {
+
+		try {
+			System.out.println("Processing Simulator Details.......");
+			
+			List<ProcessingDetailsData> processingDetails = this.processRequestReadplatformService.retrieveUnProcessingDetails();
+
+			for (ProcessingDetailsData detailsData : processingDetails) {
+
+				ProcessRequest processRequest = this.processRequestRepository.findOne(detailsData.getId());
+				
+				processRequest.setProcessStatus();
+				this.processRequestRepository.save(processRequest);
+				
+				
+			}
+			System.out.println("Responsor Job is Completed...");
+		} catch (DataIntegrityViolationException exception) {
+
+		}
+	}
+	
+	
+	@Override
+	@CronTarget(jobName = JobName.GENERATE_STATMENT)
+	public void generateStatment() 
+	  {
+
+		try {
+			
+			JobParameterData data=this.sheduleJobReadPlatformService.getJobParameters(JobName.GENERATE_STATMENT.toString());
+		    if(data!=null){
+		    	 
+		    	 List<ScheduleJobData> sheduleDatas = this.sheduleJobReadPlatformService.retrieveSheduleJobDetails(data.getBatchName());
+		    	 
+		    	for(ScheduleJobData scheduleJobData:sheduleDatas)
+				{
+					List<Long> clientIds = this.sheduleJobReadPlatformService.getClientIds(scheduleJobData.getQuery());
+					  
+					 for(Long clientId:clientIds)
+					 {
+						
+						 JSONObject jsonobject = new JSONObject();
+						
+							DateTimeFormatter formatter = DateTimeFormat.forPattern("dd MMMM yyyy");
+							String formattedDate = formatter.print(data.getDueDate());
+
+							// System.out.println(formattedDate);
+							jsonobject.put("dueDate",formattedDate);
+							jsonobject.put("locale", "en");
+							jsonobject.put("dateFormat", "dd MMMM YYYY");
+							jsonobject.put("message", data.getPromotionalMessage());
+							this.billingMasterApiResourse.retrieveBillingProducts(clientId,	jsonobject.toString());
+					 }
+				}
+				
+		}
+		    System.out.println("Job is Completed...");
+		}catch (Exception exception) {
+
+		}
+	}	
+	
+	@Transactional
+	@Override
+	@CronTarget(jobName = JobName.MESSANGER)
+	public void processingMessages() 
+	  {
+		try 
+		{
+			JobParameterData data=this.sheduleJobReadPlatformService.getJobParameters(JobName.MESSANGER.toString());
+	         
+            if(data!=null){
+      			
+		List<ScheduleJobData> sheduleDatas = this.sheduleJobReadPlatformService.retrieveSheduleJobDetails(data.getBatchName());
+		
+		for (ScheduleJobData scheduleJobData : sheduleDatas) {
+
+					Long messageId = this.sheduleJobReadPlatformService.getMessageId(data.getMessageTempalate());
+					
+					this.billingMessageDataWritePlatformService.createMessageData(messageId,scheduleJobData.getQuery());
+
+				}
+		    }
+		}
+		
+		catch (Exception dve) 
+		{
+					handleCodeDataIntegrityIssues(null, dve);
+		}
+	  }
+	
+	@Transactional
+	@Override
+	@CronTarget(jobName = JobName.AUTO_EXIPIRY)
+	public void processingAutoExipryOrders() 
+	  {
+		try 
+		{
+			
+			
+			JobParameterData data=this.sheduleJobReadPlatformService.getJobParameters(JobName.AUTO_EXIPIRY.toString());
          
+                 if(data!=null){
+                	 
+			List<ScheduleJobData> sheduleDatas = this.sheduleJobReadPlatformService.retrieveSheduleJobDetails(data.getBatchName());
 			
-        	   int sheduleJobs =0;
-        	   List<ScheduleJobData> sheduleDatas=this.sheduleJobReadPlatformService.retrieveSheduleJobDetails();
+			for (ScheduleJobData scheduleJobData : sheduleDatas) 
+			{
+				List<Long> clientIds = this.sheduleJobReadPlatformService.getClientIds(scheduleJobData.getQuery());
+				for(Long clientId:clientIds)
+				{
+					
+				List<OrderData> orderDatas = this.orderReadPlatformService.retrieveClientOrderDetails(clientId);
+				
+      			for (OrderData orderData : orderDatas) 
+      			  {
+      		
+				    if (orderData.getEndDate().equals(new LocalDate()))
+				     {
 
-        	   for(ScheduleJobData scheduleJobData : sheduleDatas){
-        		   
-        		   
-        		    if(scheduleJobData.getProcessType().equalsIgnoreCase("Message")){
-      				  try{
-     					  Long messageId= this.sheduleJobReadPlatformService.getMessageId(scheduleJobData.getProcessParam());
-                             this.billingMessageDataWritePlatformService.createMessageData(messageId,scheduleJobData.getQuery());
-                            
-                             
-     				  } catch (Exception dve) {
-         					 handleCodeDataIntegrityIssues(null, dve);
-         				}
-     				   }
-        		    else{
-        		    List<Long> clientIds=this.sheduleJobReadPlatformService.getClientIds(scheduleJobData.getQuery());
-            		   //Get the Client Ids
-                	   for(Long clientId : clientIds){
-                		   try{
-                			 
-                			   
-                			  if(scheduleJobData.getProcessType().equalsIgnoreCase("Invoice")){
-            		         //   this.invoiceClient.invoicingSingleClient(clientId, new LocalDate());
-            		            
-            		            
-                			   }else if(scheduleJobData.getProcessType().equalsIgnoreCase("Statement")){
-                			       JSONObject jsonobject = new JSONObject();
-                			       LocalDate date=new LocalDate();
-                			        DateTimeFormatter formatter = DateTimeFormat.forPattern("dd MMMM yyyy");
-                			        String formattedDate = formatter.print(date);
-                			        
-                			      //  System.out.println(formattedDate);
-                			       jsonobject.put("dueDate",formattedDate.toString());
-                			       jsonobject.put("locale", "en");
-                	               jsonobject.put("dateFormat","dd MMMM YYYY");	
-                		           jsonobject.put("message","Statment");
-                		            this.billingMasterApiResourse.retrieveBillingProducts(clientId,jsonobject.toString());
-                			 
-                			   }else if(scheduleJobData.getProcessType().equalsIgnoreCase("Auto Expiry")){
-                				   
-                				   List<OrderData> orderDatas=this.orderReadPlatformService.retrieveClientOrderDetails(clientId);
-                				   for(OrderData data : orderDatas){
-                					   if(data.getEndDate().equals(new LocalDate())){
-                						   
-                						   JSONObject jsonobject = new JSONObject();
-                        		           jsonobject.put("disconnectReason","Date Expired");
-                        		           final JsonElement parsedCommand = this.fromApiJsonHelper.parse(jsonobject.toString());
-                        		           
-                        		           final JsonCommand command = JsonCommand.from(jsonobject.toString(),parsedCommand,this.fromApiJsonHelper,
-                        		          		 "DissconnectOrder",clientId,null,null,clientId,null,null,null,null,null,null);
-                        		           this.orderWritePlatformService.updateOrder(command,data.getId());
-                						   
-                					   }
-                				   }
-                				   
-                			      
-                			   }
-                			   
-                		   }
-                			   catch (Exception dve) {
-                					 handleCodeDataIntegrityIssues(null, dve);
-                					//return  CommandProcessingResult.empty();
-                				}
-                		   sheduleJobs++;   
-                          
-                	   
-        		 }
-            	//   ScheduleJobs scheduleJob=this.scheduledJobRepository.findOne(scheduleJobData.getId()); 
-            	   //     scheduleJob.setStatus('Y');
-            	    //   this.scheduledJobRepository.save(scheduleJob);
-            	       
-            	       System.out.println("processing schedule Jobs are "+sheduleJobs);
-        	   }   
-		}
+					JSONObject jsonobject = new JSONObject();
+					jsonobject.put("disconnectReason","Date Expired");
+					final JsonElement parsedCommand = this.fromApiJsonHelper.parse(jsonobject.toString());
+
+					final JsonCommand command = JsonCommand.from(jsonobject.toString(),parsedCommand,this.fromApiJsonHelper,"DissconnectOrder",clientId, null,
+							null,clientId, null, null, null,null, null, null);
+					this.orderWritePlatformService.disconnectOrder(command,	orderData.getId());
+				     }
+				}
+			}
+				}
 		}
 		
-		
-@Transactional
-@Override
-@CronTarget(jobName = JobName.INVOICE)
-public  void processInvoice() {
-	
-        System.out.println("Generating invoices for orders.....");	
-	
-	 List<ScheduleJobData> sheduleDatas=this.sheduleJobReadPlatformService.retrieveSheduleJobDetails();
-	
-	 for(ScheduleJobData scheduleJobData:sheduleDatas){
-		 
-	          List<Long> clientIds=this.sheduleJobReadPlatformService.getClientIds(scheduleJobData.getQuery());
-         	   // Get the Client Ids
-	             for(Long clientId : clientIds){
-		           try{
-			 
-     	            this.invoiceClient.invoicingSingleClient(clientId, new LocalDate());
-			         
-		           }catch (Exception dve) {
-				       handleCodeDataIntegrityIssues(null, dve);
-		           }
-	             }
-	             ScheduleJobs scheduleJob=this.scheduledJobRepository.findOne(scheduleJobData.getId()); 
-	  	       scheduleJob.setStatus('Y');
-	  	      this.scheduledJobRepository.save(scheduleJob);
-	 }
-  
-	 System.out.println("Invoices are Generated.....");
+		   
+		}
+		catch (Exception dve) 
+		{
+					handleCodeDataIntegrityIssues(null, dve);
+		}
+	  }	
+	@Transactional
+	@Override
+	@CronTarget(jobName = JobName.ALL)
+	public void newJob() 
+	  {
+		System.out.println("This is new Job");
+	  }	 		
 }
-		private void handleCodeDataIntegrityIssues(Object object,Exception dve) {
-			// TODO Auto-generated method stub
-			
-		}
-		}
-
-	
-
-

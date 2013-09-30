@@ -236,4 +236,9 @@ public Order(Long clientId, Long planId, Long contractPeriod, String paytermCode
 		
 	}
 
+
+	public void setuerAction(String actionType) {
+		this.userAction=actionType;
+	}
+
 }

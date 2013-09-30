@@ -2,6 +2,7 @@ package org.mifosplatform.infrastructure.jobs.service;
 
 import java.util.List;
 
+import org.mifosplatform.billing.scheduledjobs.data.ScheduleJobData;
 import org.mifosplatform.infrastructure.core.service.Page;
 import org.mifosplatform.infrastructure.jobs.data.JobDetailData;
 import org.mifosplatform.infrastructure.jobs.data.JobDetailHistoryData;
@@ -16,5 +17,7 @@ public interface SchedulerJobRunnerReadService {
     public Page<JobDetailHistoryData> retrieveJobHistory(Long jobId, SearchParameters searchParameters);
 
     public boolean isUpdatesAllowed();
+
+	public List<ScheduleJobData> retrieveJobDetails();
 
 }

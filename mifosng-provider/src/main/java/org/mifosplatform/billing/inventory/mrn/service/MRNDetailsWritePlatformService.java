@@ -7,6 +7,6 @@ public interface MRNDetailsWritePlatformService {
 
 	CommandProcessingResult createMRNDetails(JsonCommand command);
 
-	CommandProcessingResult moveMRN(JsonCommand command, Long mrnId);
+	CommandProcessingResult moveMRN(JsonCommand command);
 
 }

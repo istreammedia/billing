@@ -9,6 +9,7 @@ import org.mifosplatform.billing.order.domain.Order;
 import org.mifosplatform.billing.order.domain.OrderRepository;
 import org.mifosplatform.billing.order.service.OrderReadPlatformService;
 import org.mifosplatform.billing.plan.domain.StatusTypeEnum;
+import org.mifosplatform.billing.plan.domain.UserActionStatusTypeEnum;
 import org.mifosplatform.billing.preparerequest.data.PrepareRequestData;
 import org.mifosplatform.billing.preparerequest.service.PrepareRequestReadplatformService;
 import org.mifosplatform.billing.processrequest.data.ProcessingDetailsData;
@@ -96,29 +97,6 @@ public class ProcessRequestWriteplatformServiceImpl implements ProcessRequestWri
 			        ThreadLocalContextUtil.setTenant(tenant);
 			        JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSourcePerTenantService.retrieveDataSource());
 			        
-			/*	Order order=this.orderRepository.findOne(orderId);
-				
-				ProcessRequest processRequest=new ProcessRequest(order.getClientId(),order.getId(),"NONE",requestData.getHardwareId(),order.getStartDate(),
-						order.getEndDate(),new Date(),new Date(),"None",'N');*/
-				
-			      /*  ProcessRequest processRequest=new ProcessRequest(1l,2l,"NONE","jhgj",new Date(),
-							new Date(),new Date(),new Date(),"None",'N');*/
-			        
-				/*List<OrderLine> orderLineData=order.getServices();
-				  for(OrderLine orderLine:orderLineData){
-					  
-					  ProcessRequestDetails processRequestDetails=new ProcessRequestDetails(orderLine.getId(),orderLine.getServiceId(),"Sent","Recieved",'N');
-					  processRequest.add(processRequestDetails);
-					  
-				  }*/
-			       
-						  
-						 /* ProcessRequestDetails processRequestDetails=new ProcessRequestDetails(1l,2l,"Sent","Recieved",'N');
-						  processRequest.add(processRequestDetails);
-						  
-					
-				
-                       this.processRequestRepository.save(processRequest);		*/		
 				
 				
 			}
@@ -134,10 +112,10 @@ public class ProcessRequestWriteplatformServiceImpl implements ProcessRequestWri
 				if(detailsData!=null){
 					
 				 Order order=this.orderRepository.findOne(detailsData.getOrderId());
-				 if(detailsData.getRequestType().equalsIgnoreCase("ACTIVE")){
+				 if(detailsData.getRequestType().equalsIgnoreCase(UserActionStatusTypeEnum.ACTIVATION.toString())){
 					 order.setStatus(OrderStatusEnumaration.OrderStatusType(StatusTypeEnum.ACTIVE).getId());
-				 }else if(detailsData.getRequestType().equalsIgnoreCase("DISCONNECTED")){
-					 order.setStatus(OrderStatusEnumaration.OrderStatusType(StatusTypeEnum.DISCONNECTION).getId());
+				 }else if(detailsData.getRequestType().equalsIgnoreCase(UserActionStatusTypeEnum.DISCONNECTION.toString())){
+					 order.setStatus(OrderStatusEnumaration.OrderStatusType(StatusTypeEnum.DISCONNECTED).getId());
 				 }else{
 					 order.setStatus(OrderStatusEnumaration.OrderStatusType(StatusTypeEnum.ACTIVE).getId());
 				 }

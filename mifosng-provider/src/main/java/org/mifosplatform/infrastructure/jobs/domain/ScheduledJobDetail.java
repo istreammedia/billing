@@ -1,16 +1,23 @@
 package org.mifosplatform.infrastructure.jobs.domain;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
+import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 
 import org.apache.commons.lang.StringUtils;
+import org.hibernate.annotations.LazyCollection;
+import org.hibernate.annotations.LazyCollectionOption;
+import org.mifosplatform.billing.scheduledjobs.domain.JobParameters;
 import org.mifosplatform.infrastructure.core.api.JsonCommand;
 import org.mifosplatform.infrastructure.jobs.api.SchedulerJobApiConstants;
 import org.springframework.data.jpa.domain.AbstractPersistable;
@@ -66,12 +73,29 @@ public class ScheduledJobDetail extends AbstractPersistable<Long> {
 
     @Column(name = "is_misfired")
     private boolean triggerMisfired;
+    
+   
 
     protected ScheduledJobDetail() {
 
     }
 
-    public String getJobName() {
+    public ScheduledJobDetail(String jobName, String displayName,String cronExpression, boolean activeSchedular) {
+                       
+    	this.jobName=jobName;
+        this.jobDisplayName=displayName;
+        this.cronExpression=cronExpression;
+        this.activeSchedular =activeSchedular;
+        this.createTime=new Date();
+        this.taskPriority=5;
+        this.jobKey=jobName+"jobDetaildefault _ DEFAULT";
+        this.updatesAllowed=true;
+        this.schedulerGroup=0;
+        this.triggerMisfired=false;
+    
+    }
+
+	public String getJobName() {
         return this.jobName;
     }
 
@@ -161,5 +185,15 @@ public class ScheduledJobDetail extends AbstractPersistable<Long> {
     public void updateTriggerMisfired(final boolean triggerMisfired) {
         this.triggerMisfired = triggerMisfired;
     }
+
+	
+	public static ScheduledJobDetail fromJson(JsonCommand command) {
+		final String jobName = command.stringValueOfParameterNamed(SchedulerJobApiConstants.schedulerJobParamName);
+	    final String displayName = command.stringValueOfParameterNamed(SchedulerJobApiConstants.displayNameParamName);
+	    final String cronExpression = command.stringValueOfParameterNamed(SchedulerJobApiConstants.cronExpressionParamName);
+	    final boolean newValue = command.booleanPrimitiveValueOfParameterNamed(SchedulerJobApiConstants.jobActiveStatusParamName);
+	    
+	return new ScheduledJobDetail(jobName,displayName,cronExpression,newValue);
+	}
 
 }

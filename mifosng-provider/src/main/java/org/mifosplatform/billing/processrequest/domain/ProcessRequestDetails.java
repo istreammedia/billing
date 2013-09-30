@@ -10,6 +10,7 @@ import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 
+import org.mifosplatform.infrastructure.core.api.JsonCommand;
 import org.mifosplatform.infrastructure.core.domain.AbstractAuditableCustom;
 import org.mifosplatform.useradministration.domain.AppUser;
 
@@ -40,9 +41,10 @@ public class ProcessRequestDetails extends AbstractAuditableCustom<AppUser, Long
 	@Column(name = "hardware_id")
 	private String hardwareId;
 
+	@Column(name = "received_status")
+	private String receivedStatus;
 	
-	
-		@Column(name = "sent_date")
+	@Column(name = "sent_date")
 	private Date sentDate;
 
 	@Column(name = "received_date")
@@ -79,9 +81,24 @@ public class ProcessRequestDetails extends AbstractAuditableCustom<AppUser, Long
 	}
 
 
+	public ProcessRequestDetails(JsonCommand command) {
+			// TODO Auto-generated constructor stub
+			
+		
+	}
+
+
 	public void update(ProcessRequest processRequest) {
       
 		this.processRequest=processRequest;
+		
+	}
+
+
+	public void updateStatus(JsonCommand command) {
+		this. sentMessage = command.stringValueOfParameterNamed("sentMessage");
+		this.receivedStatus = command.stringValueOfParameterNamed("receivedStatus");
+		this.receiveMessage = command.stringValueOfParameterNamed("receiveMessage");
 		
 	}
 

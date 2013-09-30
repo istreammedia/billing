@@ -65,7 +65,7 @@ public class UploadStatus extends AbstractPersistable<Long>{
 		this.uploadProcess=uploadProcess;
 		this.uploadFilePath=uploadFilePath;
 		this.processDate=processDate.toDate();
-		this.processStatus=processStatus;
+		this.processStatus="New UnProcessed";
 		this.processRecords=processRecords;
 		this.errorMessage=errorMessage;
 		this.description=description;

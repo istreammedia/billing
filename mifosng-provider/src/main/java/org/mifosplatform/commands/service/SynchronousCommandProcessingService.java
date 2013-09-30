@@ -770,10 +770,18 @@ public class SynchronousCommandProcessingService implements
 			       }else if (wrapper.isSchedulerResource()) {
 			            if (wrapper.isUpdate()) {
 			                handler = this.applicationContext.getBean("updateJobDetailCommandhandler", NewCommandSourceHandler.class);
-			            } else {
+			            }else if (wrapper.isCreate()) {
+			                handler = this.applicationContext.getBean("createJobDetailCommandhandler", NewCommandSourceHandler.class);
+			            }else if (wrapper.isDelete()) {
+			                handler = this.applicationContext.getBean("deleteJobDetailCommandhandler", NewCommandSourceHandler.class);
+			            }else {
 			                throw new UnsupportedCommandException(wrapper.commandName());
 			            }
-			        }
+			        }else if(wrapper.isEntitlementResource()){
+		                 if(wrapper.isCreateEntitlement()) {
+		                     handler = applicationContext.getBean("createEntitlementCommandHandler",NewCommandSourceHandler.class);
+		                 }
+		           }
 			       
 			       else {
 			               throw new UnsupportedCommandException(wrapper.commandName());

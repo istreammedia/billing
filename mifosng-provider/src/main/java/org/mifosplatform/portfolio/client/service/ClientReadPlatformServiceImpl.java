@@ -276,7 +276,7 @@ public class ClientReadPlatformServiceImpl implements ClientReadPlatformService 
             builder.append("c.fullname as fullname, c.display_name as displayName,c.category_type as categoryType, ");
             builder.append("c.email as email,c.phone as phone,c.activation_date as activationDate, c.image_key as imagekey, ");
             builder.append("a.address_no as addrNo,a.street as street,a.city as city,a.state as state,a.country as country, ");
-            builder.append(" a.zip as zipcode,b.balance_amount as clientBalance ");
+            builder.append(" a.zip as zipcode,b.balance_amount as balanceAmount ");
             builder.append("from m_client c ");
             builder.append("join m_office o on o.id = c.office_id ");
             builder.append("left outer join b_client_balance b on  b.client_id = c.id ");
@@ -316,7 +316,7 @@ public class ClientReadPlatformServiceImpl implements ClientReadPlatformService 
             final String state = rs.getString("state");
             final String country = rs.getString("country");
             final String zipcode = rs.getString("zipcode");
-            final BigDecimal clientBalance = rs.getBigDecimal("clientBalance");
+            final BigDecimal clientBalance = rs.getBigDecimal("balanceAmount");
 
             return ClientData.instance(accountNo, status, officeId, officeName, id, firstname, middlename, lastname, fullname, displayName,
                     externalId, activationDate, imageKey,categoryType,email,phone, addressNo, street, city, state, country, zipcode, clientBalance);

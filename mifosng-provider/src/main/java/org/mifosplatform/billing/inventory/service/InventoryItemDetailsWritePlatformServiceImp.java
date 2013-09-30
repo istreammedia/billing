@@ -3,9 +3,9 @@ package org.mifosplatform.billing.inventory.service;
 import java.util.List;
 
 import org.joda.time.LocalDate;
-import org.mifosplatform.billing.association.data.HardwareAssociationData;
 import org.mifosplatform.billing.association.service.HardwareAssociationReadplatformService;
 import org.mifosplatform.billing.association.service.HardwareAssociationWriteplatformService;
+import org.mifosplatform.billing.hardwaremapping.service.HardwareMappingReadPlatformService;
 import org.mifosplatform.billing.inventory.domain.InventoryGrn;
 import org.mifosplatform.billing.inventory.domain.InventoryGrnRepository;
 import org.mifosplatform.billing.inventory.domain.InventoryItemDetails;
@@ -17,13 +17,14 @@ import org.mifosplatform.billing.inventory.mrn.domain.InventoryTransactionHistor
 import org.mifosplatform.billing.inventory.mrn.domain.InventoryTransactionHistoryJpaRepository;
 import org.mifosplatform.billing.inventory.serialization.InventoryItemAllocationCommandFromApiJsonDeserializer;
 import org.mifosplatform.billing.inventory.serialization.InventoryItemCommandFromApiJsonDeserializer;
+import org.mifosplatform.billing.item.domain.ItemRepository;
 import org.mifosplatform.billing.onetimesale.domain.OneTimeSale;
 import org.mifosplatform.billing.onetimesale.domain.OneTimeSaleRepository;
 import org.mifosplatform.billing.onetimesale.service.OneTimeSaleReadPlatformService;
+import org.mifosplatform.billing.order.domain.PlanHardwareMappingRepository;
 import org.mifosplatform.billing.transactionhistory.service.TransactionHistoryWritePlatformService;
 import org.mifosplatform.billing.uploadstatus.domain.UploadStatus;
 import org.mifosplatform.billing.uploadstatus.domain.UploadStatusRepository;
-import org.mifosplatform.infrastructure.configuration.domain.GlobalConfigurationProperty;
 import org.mifosplatform.infrastructure.configuration.domain.GlobalConfigurationRepository;
 import org.mifosplatform.infrastructure.core.api.JsonCommand;
 import org.mifosplatform.infrastructure.core.data.CommandProcessingResult;
@@ -35,8 +36,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
 
 
 @Service
@@ -60,6 +65,9 @@ public class InventoryItemDetailsWritePlatformServiceImp implements InventoryIte
 	private GlobalConfigurationRepository configurationRepository;
 	private HardwareAssociationReadplatformService associationReadplatformService;
 	private HardwareAssociationWriteplatformService associationWriteplatformService;
+	private final PlanHardwareMappingRepository hardwareMappingRepository;
+	private final ItemRepository itemRepository;
+	private final HardwareMappingReadPlatformService hardwareMappingReadPlatformService; 
 	 public final static String CONFIG_PROPERTY="Implicit Association";
 	@Autowired
 	public InventoryItemDetailsWritePlatformServiceImp(final InventoryItemDetailsReadPlatformService inventoryItemDetailsReadPlatformService, 
@@ -69,7 +77,8 @@ public class InventoryItemDetailsWritePlatformServiceImp implements InventoryIte
 			final OneTimeSaleRepository oneTimeSaleRepository,final InventoryItemDetailsRepository inventoryItemDetailsRepository,final FromJsonHelper fromJsonHelper, 
 			final UploadStatusRepository uploadStatusRepository,final TransactionHistoryWritePlatformService transactionHistoryWritePlatformService,
 			final InventoryTransactionHistoryJpaRepository inventoryTransactionHistoryJpaRepository,final GlobalConfigurationRepository  configurationRepository,
-			final HardwareAssociationReadplatformService associationReadplatformService,final HardwareAssociationWriteplatformService associationWriteplatformService) 
+			final HardwareAssociationReadplatformService associationReadplatformService,final HardwareAssociationWriteplatformService associationWriteplatformService,
+			final PlanHardwareMappingRepository hardwareMappingRepository,final ItemRepository itemRepository,final HardwareMappingReadPlatformService hardwareMappingReadPlatformService) 
 	{
 		this.inventoryItemDetailsReadPlatformService = inventoryItemDetailsReadPlatformService;
 		this.context=context;
@@ -88,6 +97,9 @@ public class InventoryItemDetailsWritePlatformServiceImp implements InventoryIte
 		this.configurationRepository=configurationRepository;
 		this.associationReadplatformService=associationReadplatformService;
 		this.associationWriteplatformService=associationWriteplatformService;
+		this.hardwareMappingRepository=hardwareMappingRepository;
+		this.itemRepository=itemRepository;
+		this.hardwareMappingReadPlatformService=hardwareMappingReadPlatformService;
 	}
 	
 	private final static Logger logger = (Logger) LoggerFactory.getLogger(InventoryItemDetailsWritePlatformServiceImp.class);
@@ -168,8 +180,7 @@ public class InventoryItemDetailsWritePlatformServiceImp implements InventoryIte
 
 		@Override
 		public CommandProcessingResult allocateHardware(JsonCommand command) {
-			InventoryItemDetailsAllocation inventoryItemDetailsAllocation=null;
-			InventoryItemDetails inventoryItemDetails = null;
+			Long id = null;
 			try{
 				context.authenticatedUser();
 				
@@ -179,69 +190,59 @@ public class InventoryItemDetailsWritePlatformServiceImp implements InventoryIte
 				/*
 				 * data comming from the client side is stored in inventoryItemAllocation
 				 * */
-				inventoryItemDetailsAllocation = InventoryItemDetailsAllocation.fromJson(command);
+				 final JsonElement element = fromJsonHelper.parse(command.json());
+			        
+			        
+			        JsonArray allocationData = fromJsonHelper.extractJsonArrayNamed("serialNumber", element);
+			        int i=1;
+			        for(JsonElement j:allocationData){
+			        	
+			        	InventoryItemDetailsAllocation inventoryItemDetailsAllocation=null;
+						InventoryItemDetails inventoryItemDetails = null;
+			        	inventoryItemDetailsAllocation = InventoryItemDetailsAllocation.fromJson(j,fromJsonHelper);
+			        	try{
+							inventoryItemDetails = inventoryItemDetailsReadPlatformService.retriveInventoryItemDetail(inventoryItemDetailsAllocation.getSerialNumber(),inventoryItemDetailsAllocation.getItemMasterId());
+							if(inventoryItemDetails.getClientId()!=null){
+								if(inventoryItemDetails.getClientId()<=0){
+								}else{
+									throw new PlatformDataIntegrityException("SerialNumber "+inventoryItemDetailsAllocation.getSerialNumber()+" already exist.", "SerialNumber "+inventoryItemDetailsAllocation.getSerialNumber()+ "already exist.","serialNumber"+i);
+								}
+							}else{
+								throw new PlatformDataIntegrityException("invalid.serial.number2", "invalid.serial.number2","invalid.serial.number2");
+							}
+							}catch(EmptyResultDataAccessException e){
+								throw new PlatformDataIntegrityException("SerialNumber SerialNumber"+i+" doest not exist.","SerialNumber SerialNumber"+i+" doest not exist.","serialNumber"+i);
+							}
+			        	
+			        	inventoryItemDetails = inventoryItemDetailsRepository.findOne(inventoryItemDetails.getItemMasterId());
+						inventoryItemDetails.setItemMasterId(inventoryItemDetailsAllocation.getItemMasterId());
+						inventoryItemDetails.setClientId(inventoryItemDetailsAllocation.getClientId());
+						inventoryItemDetails.setStatus("Used");
+						
+						
+						this.inventoryItemDetailsRepository.save(inventoryItemDetails);
+						this.inventoryItemDetailsRepository.flush();
+						this.inventoryItemDetailsAllocationRepository.save(inventoryItemDetailsAllocation);
+						this.inventoryItemDetailsAllocationRepository.flush();
+						OneTimeSale ots = this.oneTimeSaleRepository.findOne(inventoryItemDetailsAllocation.getOrderId());
+						ots.setHardwareAllocated("ALLOCATED");
+						this.oneTimeSaleRepository.save(ots);
+						this.oneTimeSaleRepository.flush();
+						this.transactionHistoryWritePlatformService.saveTransactionHistory(ots.getClientId(), "HardwareAllocation", ots.getSaleDate(),"Units:"+ots.getUnits(),"ChargeCode:"+ots.getChargeCode(),"Quantity:"+ots.getQuantity(),"ItemId:"+ots.getItemId());
 
-				/*
-				 * trying to get Data(Id) from  b_item_detail where b_item_detail.serial_no=?";
-				 */
-				
-				inventoryItemDetails = inventoryItemDetailsReadPlatformService.retriveInventoryItemDetail(inventoryItemDetailsAllocation.getSerialNumber(),inventoryItemDetailsAllocation.getItemMasterId());
-				if(inventoryItemDetails.getClientId()!=null){
-					if(inventoryItemDetails.getClientId()<=0){
-					}else{
-						throw new PlatformDataIntegrityException("invalid.serial.number1", "invalid.serial.number1","invalid.serial.number1");
-					}
-				}else{
-					throw new PlatformDataIntegrityException("invalid.serial.number2", "invalid.serial.number2","invalid.serial.number2");
-				}
-				
-				
-				
-				
-				/**
-				 * getting data from item_detail table based on item_master_id
-				 */
-				inventoryItemDetails = inventoryItemDetailsRepository.findOne(inventoryItemDetails.getItemMasterId());
-				inventoryItemDetails.setItemMasterId(inventoryItemDetailsAllocation.getItemMasterId());
-				inventoryItemDetails.setClientId(inventoryItemDetailsAllocation.getClientId());
-				inventoryItemDetails.setStatus("Used");
-				//InventoryItemDetailsAllocation serialNumbers = inventoryItemDetailsAllocationRepository.findOne(inventoryItemDetailsAllocation.getItemMasterId());
-				
-				this.inventoryItemDetailsRepository.save(inventoryItemDetails);
-				this.inventoryItemDetailsAllocationRepository.save(inventoryItemDetailsAllocation);
-				
-		
-				//For Plan And HardWare Association
-				GlobalConfigurationProperty configurationProperty=this.configurationRepository.findOneByName(CONFIG_PROPERTY);
-				
-				/*if(configurationProperty.isEnabled())
-				{
-					List<HardwareAssociationData> associationDatas=this.associationReadplatformService.
-							retrieveClientUnallocatePlanDetails(inventoryItemDetailsAllocation.getClientId());
-					
-					if(!associationDatas.isEmpty()){
-						this.associationWriteplatformService.createNewHardwareAssociation(inventoryItemDetailsAllocation.getClientId(),
-								associationDatas.get(0).getPlanId(),inventoryItemDetailsAllocation.getSerialNumber(),associationDatas.get(0).getorderId());
-					}
-				
-				}*/
-				
-				
-				
-				
-				OneTimeSale ots = this.oneTimeSaleRepository.findOne(inventoryItemDetailsAllocation.getOrderId());
-				ots.setHardwareAllocated("ALLOCATED");
-				this.oneTimeSaleRepository.save(ots);
-				this.transactionHistoryWritePlatformService.saveTransactionHistory(ots.getClientId(), "HardwareAllocation", ots.getSaleDate(),"Units:"+ots.getUnits(),"ChargeCode:"+ots.getChargeCode(),"Quantity:"+ots.getQuantity(),"ItemId:"+ots.getItemId());						
-
-				InventoryTransactionHistory transactionHistory = InventoryTransactionHistory.logTransaction(new LocalDate().toDate(), ots.getId(),"Allocation",inventoryItemDetailsAllocation.getSerialNumber(), inventoryItemDetailsAllocation.getItemMasterId(),inventoryItemDetails.getOfficeId(),inventoryItemDetailsAllocation.getClientId());
-				inventoryTransactionHistoryJpaRepository.save(transactionHistory);
+						InventoryTransactionHistory transactionHistory = InventoryTransactionHistory.logTransaction(new LocalDate().toDate(), ots.getId(),"Allocation",inventoryItemDetailsAllocation.getSerialNumber(), inventoryItemDetailsAllocation.getItemMasterId(),inventoryItemDetails.getOfficeId(),inventoryItemDetailsAllocation.getClientId());
+						
+						inventoryTransactionHistoryJpaRepository.save(transactionHistory);
+						inventoryTransactionHistoryJpaRepository.flush();
+						id = inventoryItemDetailsAllocation.getId();
+						i++;
+			        }
 				
 			}catch(DataIntegrityViolationException dve){
 				handleDataIntegrityIssues(command, dve); 
 				return new CommandProcessingResult(Long.valueOf(-1));
 			}
-			return new CommandProcessingResultBuilder().withCommandId(1L).withEntityId(inventoryItemDetailsAllocation.getId()).build();
+			return new CommandProcessingResultBuilder().withCommandId(1L).withEntityId(id).build();
 			/*command is has to be changed to command.commandId() in the above code*/
 		}
 		

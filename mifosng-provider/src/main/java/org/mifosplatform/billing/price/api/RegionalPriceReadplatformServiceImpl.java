@@ -48,21 +48,9 @@ public RegionalPriceReadplatformServiceImpl(final TenantAwareRoutingDataSource d
 	}
 	
 	
-	 @Transactional
-	    @Override
-	    @CronTarget(jobName = JobName.UPDATE_LOAN_SUMMARY)
-	    public void updateLoanSummaryDetails() {
-		  System.out.println("JObs are Integrated");
-	 }
+	
 	 
-	 
-	 @Transactional
-	    @Override
-	    @CronTarget(jobName = JobName.UPDATE_LOAN_ARREARS_AGEING)
-	 public void updateLoanArrearsAgeingDetails() {
-		 System.out.println("Job2 Running");
-	 }
-	 
+	
 	 
 	private static final class PriceRegionMapper implements RowMapper<PriceRegionData> {
 

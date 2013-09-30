@@ -1663,10 +1663,10 @@ public CommandWrapperBuilder createMRN(){
 	 return this;
 	}
 
-public CommandWrapperBuilder moveMRN(final Long clientId) {
+public CommandWrapperBuilder moveMRN() {
 	 this.actionName = "MOVE";
 	 this.entityName = "MRN";
-	 this.entityId = clientId;
+	 this.entityId = null;
 	 this.href = "/mrndetails/movemrn/"+clientId;
 	 return this;
 	}
@@ -1693,6 +1693,32 @@ public CommandWrapperBuilder updateJobDetail(final Long jobId) {
     this.entityId = jobId;
     this.href = "/updateJobDetail/" + jobId + "/updateJobDetail";
     return this;
+}
+
+public CommandWrapperBuilder addNewJob() {
+	this.actionName = "CREATE";
+    this.entityName = "SCHEDULER";
+    
+    this.href = "/job";
+    return this;
+}
+
+public CommandWrapperBuilder deleteJob(Long jobId) {
+	this.actionName = "DELETE";
+    this.entityName = "SCHEDULER";
+    this.entityId=jobId;
+    this.href = "/job/"+jobId;
+    return this;
+}
+
+public CommandWrapperBuilder createEntitlement(Long id) {
+	
+	 this.actionName = "CREATE";
+	 this.entityName = "Entitlement"; 
+	 this.entityId = id;
+	 this.href = "/entitlements";
+	 return this;
+	
 }
 
 }

@@ -47,12 +47,13 @@ public class InventoryItemDetailsReadPlatformServiceImp implements InventoryItem
 			String itemDescription = rs.getString("itemDescription");
 			String supplier = rs.getString("supplier");
 			Long clientId = rs.getLong("clientId");
-			return new InventoryItemDetailsData(id,itemMasterId,serialNumber,grnId,provisioningSerialNumber,quality,status,warranty,remarks,itemDescription,supplier,clientId);
+			String officeName = rs.getString("officeName");
+			return new InventoryItemDetailsData(id,itemMasterId,serialNumber,grnId,provisioningSerialNumber,quality,status,warranty,remarks,itemDescription,supplier,clientId,officeName);
 		}
 		
 		public String schema(){
 			//String sql = "item.id as id,item.item_master_id as itemMasterId, item.serial_no as serialNumber, item.grn_id as grnId, item.provisioning_serialno as provisioningSerialNumber, item.quality as quality, item.status as status, item.warranty as warranty, item.remarks as remarks, master.item_description as itemDescription from b_item_detail item left outer join b_item_master master on item.item_master_id = master.id";
-			String sql = "item.id as id,item.item_master_id as itemMasterId, item.serial_no as serialNumber, item.grn_id as grnId, (select supplier_description from b_supplier where id = (select supplier_id from b_grn where b_grn.id=item.grn_id)) as supplier,item.provisioning_serialno as provisioningSerialNumber, item.quality as quality, item.status as status, item.warranty as warranty, item.remarks as remarks, master.item_description as itemDescription, item.client_id as clientId from b_item_detail item left outer join b_item_master master on item.item_master_id = master.id";
+			String sql = "item.id as id, office.name as officeName,item.item_master_id as itemMasterId, item.serial_no as serialNumber, item.grn_id as grnId, (select supplier_description from b_supplier where id = (select supplier_id from b_grn where b_grn.id=item.grn_id)) as supplier,item.provisioning_serialno as provisioningSerialNumber, item.quality as quality, item.status as status, item.warranty as warranty, item.remarks as remarks, master.item_description as itemDescription, item.client_id as clientId from b_item_detail item left outer join b_item_master master on item.item_master_id = master.id left outer join m_office office on item.office_id=office.id";
 			return sql;
 		}
 		
@@ -81,12 +82,12 @@ public class InventoryItemDetailsReadPlatformServiceImp implements InventoryItem
 	}
 
 
-	private class SerialNumberMapper implements RowMapper<QuantityData>{
+	private class SerialNumberMapper implements RowMapper<String>{
 
 		@Override
-		public QuantityData mapRow(ResultSet rs, int rowNum)throws SQLException {
+		public String mapRow(ResultSet rs, int rowNum)throws SQLException {
 			String serialNumber = rs.getString("serialNumber");
-			return new QuantityData(serialNumber);
+			return serialNumber;
 		}
 	}
 	
@@ -146,7 +147,7 @@ private final class SerialNumberForValidation implements RowMapper<String>{
 	}
 	
 	@Override
-	public List<QuantityData> retriveSerialNumbers(Long oneTimeSaleId) {
+	public List<String> retriveSerialNumbers(Long oneTimeSaleId) {
 		
 		context.authenticatedUser();
 		SerialNumberMapper rowMapper = new SerialNumberMapper();
@@ -184,7 +185,7 @@ private final class SerialNumberForValidation implements RowMapper<String>{
 	}
 	
 	@Override
-	public InventoryItemSerialNumberData retriveAllocationData(List<QuantityData> itemSerialNumbers,QuantityData quantityData, ItemMasterIdData itemMasterIdData){
+	public InventoryItemSerialNumberData retriveAllocationData(List<String> itemSerialNumbers,QuantityData quantityData, ItemMasterIdData itemMasterIdData){
 		
 		return new InventoryItemSerialNumberData(itemSerialNumbers, quantityData.getQuantity(), itemMasterIdData.getItemMasterId());
 	}

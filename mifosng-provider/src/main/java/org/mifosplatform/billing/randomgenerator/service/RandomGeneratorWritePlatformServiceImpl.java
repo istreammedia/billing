@@ -1,9 +1,7 @@
 package org.mifosplatform.billing.randomgenerator.service;
 
 import java.text.ParseException;
-import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Random;
 import java.util.Set;
 
@@ -12,10 +10,7 @@ import org.mifosplatform.billing.randomgenerator.domain.RandomGeneratorDetails;
 import org.mifosplatform.billing.randomgenerator.domain.RandomGenertatorRepository;
 import org.mifosplatform.billing.randomgenerator.serialization.RandomGeneratorCommandFromApiJsonDeserializer;
 import org.mifosplatform.infrastructure.core.api.JsonCommand;
-import org.mifosplatform.infrastructure.core.data.ApiParameterError;
 import org.mifosplatform.infrastructure.core.data.CommandProcessingResult;
-import org.mifosplatform.infrastructure.core.data.DataValidatorBuilder;
-import org.mifosplatform.infrastructure.core.exception.PlatformApiDataValidationException;
 import org.mifosplatform.infrastructure.core.exception.PlatformDataIntegrityException;
 import org.mifosplatform.infrastructure.security.service.PlatformSecurityContext;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,7 +20,7 @@ import org.springframework.stereotype.Service;
 @Service
 public class RandomGeneratorWritePlatformServiceImpl implements
 		RandomGeneratorWritePlatformService {
-	Long i, j, x , y;
+	int i, j, x=0 , y;
 	private final PlatformSecurityContext context;
 	private final RandomGenertatorRepository randomGeneratorRepository;
 	private final RandomGeneratorCommandFromApiJsonDeserializer fromApiJsonDeserializer;
@@ -47,7 +42,6 @@ public class RandomGeneratorWritePlatformServiceImpl implements
 
 	}
 
-	@SuppressWarnings("rawtypes")
 	@Override
 	public CommandProcessingResult createRandomGenerator(JsonCommand command) {
 		try {
@@ -74,19 +68,21 @@ public class RandomGeneratorWritePlatformServiceImpl implements
 
 	}
 
+	@SuppressWarnings({ "rawtypes", "unchecked" })
 	public void generateRandomNumbers(RandomGenerator randomGenerator) {
-		 final List<ApiParameterError> dataValidationErrors = new ArrayList<ApiParameterError>();
-	     final DataValidatorBuilder baseDataValidator = new DataValidatorBuilder(dataValidationErrors).resource("randomgenerator");
+		
+
+
 		Set myNumbers = new HashSet();
 		String minSerialSeries = "";
 		String maxSerialSeries = "";
-		Long length = Long
+		int length = Integer
 				.valueOf(randomGenerator.getLength().toString());
 		String Type = randomGenerator.getPinCategory();
-		String SerialNo = randomGenerator.getSerialNo();
-		Long Serial = Long.parseLong(SerialNo);
-		for ( i = (long) 0; i < Serial; i++) {
-			if (i == 0) {
+		Long SerialNo =randomGenerator.getSerialNo();
+	
+		for (x = 0; x < SerialNo; x++) {
+			if (x == 0) {
 				minSerialSeries += "1";
 				maxSerialSeries += "9";
 			} else {
@@ -94,33 +90,35 @@ public class RandomGeneratorWritePlatformServiceImpl implements
 				maxSerialSeries += "9";
 			}
 		}
+		
+		
 		Long minNo = Long.parseLong(minSerialSeries);
 		Long maxNo = Long.parseLong(maxSerialSeries);
 		Long no = this.randomGeneratorReadPlatformService.retrieveMaxNo(minNo,
 				maxNo);
-		if(no==null || no==0){
-			minSerialSeries="";
-			for (x = (long) 0; x < Serial; x++) {
-				if (x == 0) {
-					minSerialSeries += "1";
-				} else {
-					minSerialSeries += "0";
-				}
-			}
-			no=Long.parseLong(minSerialSeries);
-			no=no-1;
-		}
 		
+		 if(no==null){
+			   minSerialSeries="";
+			   for (x = 0; x < SerialNo; x++) {
+			    if (x == 0) {
+			     minSerialSeries += "1";
+			    } else {
+			     minSerialSeries += "0";
+			    }
+			   }
+			   no=Long.parseLong(minSerialSeries);
+			  }
 		Long quantity = randomGenerator.getQuantity();
-		x = (long) randomGenerator.getBeginWith().length();
+		x = randomGenerator.getBeginWith().length();
 		y = length - x;
-        x=no;
+
+		@SuppressWarnings("unused")
 		Random rand = new Random(y);
 		if (Type.equalsIgnoreCase("Alpha")) {
-			for (i = (long) 0; i < quantity; i++) {
+			for (i = 0; i < quantity; i++) {
 				String name = "";
 				name += randomGenerator.getBeginWith();
-				for (j = (long) 0; j < y; j++) {
+				for (j = 0; j < y; j++) {
 					name += alphabets.charAt((int) (Math.random() * alphabets
 							.length()));
 				}
@@ -130,22 +128,13 @@ public class RandomGeneratorWritePlatformServiceImpl implements
 								.retrieveIndividualPin(name);
 
 						if (value == null) {
-							if(no<maxNo){
 							no += 1;
-							}
-							else{
-								no=no+1;
-								baseDataValidator.reset().parameter("Serial").value(no).inMinMaxRange(minNo.intValue(), maxNo.intValue());
-								throw new PlatformApiDataValidationException("validation.msg.serialNo.errors.exist",
-						                "validation.serialno.Outofrange", dataValidationErrors);
-							}
 							RandomGeneratorDetails randomGeneratordetails = new RandomGeneratorDetails(
 									name, no);
 							randomGenerator.add(randomGeneratordetails);
 							break;
 						} else {
 							i--;
-							break;
 						}
 					}
 
@@ -153,10 +142,10 @@ public class RandomGeneratorWritePlatformServiceImpl implements
 			}
 		}
 		if (Type.equalsIgnoreCase("Numeric")) {
-			for (i = (long) 0; i < quantity; i++) {
+			for (i = 0; i < quantity; i++) {
 				String name = "";
 				name += randomGenerator.getBeginWith();
-				for (j = (long) 0; j < y; j++) {
+				for (j = 0; j < y; j++) {
 					name += numerics.charAt((int) (Math.random() * numerics
 							.length()));
 				}
@@ -165,30 +154,22 @@ public class RandomGeneratorWritePlatformServiceImpl implements
 					String value = this.randomGeneratorReadPlatformService
 							.retrieveIndividualPin(name);
 					if (value == null) {
-						if(no<maxNo){
-						no += 1;
-						}
-						else{
-							baseDataValidator.reset().parameter("Serial").value(no).inMinMaxRange(minNo.intValue(), maxNo.intValue());
-							throw new PlatformApiDataValidationException("validation.msg.serialNo.errors.exist",
-					                "Serial Number Out of range .", dataValidationErrors);
-						}
+						no +=1;
 						RandomGeneratorDetails randomGeneratordetails = new RandomGeneratorDetails(
 								name, no);
 						randomGenerator.add(randomGeneratordetails);
 						break;
 					} else {
 						i--;
-						break;
 					}
 				}
 			}
 		}
 		if (Type.equalsIgnoreCase("AlphaNumeric")) {
-			for (i = (long) 0; i < quantity; i++) {
+			for (i = 0; i < quantity; i++) {
 				String name = "";
 				name += randomGenerator.getBeginWith();
-				for (j = (long) 0; j < y; j++) {
+				for (j = 0; j < y; j++) {
 					name += alphaNumerics
 							.charAt((int) (Math.random() * alphaNumerics
 									.length()));
@@ -197,27 +178,20 @@ public class RandomGeneratorWritePlatformServiceImpl implements
 					String value = this.randomGeneratorReadPlatformService
 							.retrieveIndividualPin(name);
 					if (value == null) {
-						if(no<maxNo){
 						no += 1;
-						}
-						else{
-							baseDataValidator.reset().parameter("Serial").value(no).inMinMaxRange(minNo.intValue(), maxNo.intValue());
-							throw new PlatformApiDataValidationException("validation.msg.serialNo.errors.exist",
-					                "Serial Number Out of range .", dataValidationErrors);
-						}
 						RandomGeneratorDetails randomGeneratordetails = new RandomGeneratorDetails(
 								name, no);
 						randomGenerator.add(randomGeneratordetails);
 						break;
 					} else {
 						i--;
-						break;
 					}
 
 				}
 			}
 		}
 
+	
 	}
 
 	private void handleCodeDataIntegrityIssues(final JsonCommand command,

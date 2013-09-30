@@ -28,7 +28,9 @@ public class ProcessRequest   {
 	@Column(name = "order_id")
 	private Long orderId;
 
-	
+	@Column(name = "is_processed")
+	private char isProcessed='N';
+
 
 	@Column(name = "provisioing_system")
 	private String provisioingSystem;
@@ -87,6 +89,69 @@ public class ProcessRequest   {
 		}
 		
 	}
+
+
+
+	public void setProcessStatus() {
+		this.isProcessed='Y';
+		
+	}
+
+
+
+	public Long getId() {
+		return id;
+	}
+
+
+
+	public Long getClientId() {
+		return clientId;
+	}
+
+
+
+	public Long getOrderId() {
+		return orderId;
+	}
+
+
+
+	public char getIsProcessed() {
+		return isProcessed;
+	}
+
+
+
+	public String getProvisioingSystem() {
+		return provisioingSystem;
+	}
+
+
+
+	public String getRequestType() {
+		return requestType;
+	}
+
+
+
+	public Long getPrepareRequestId() {
+		return prepareRequestId;
+	}
+
+
+
+	public char getIsNotify() {
+		return isNotify;
+	}
+
+
+
+	public List<ProcessRequestDetails> getProcessRequestDetails() {
+		return processRequestDetails;
+	}
+	
+	
  
 	
 

@@ -9,6 +9,7 @@ import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Table;
 
+import org.joda.time.LocalDate;
 import org.mifosplatform.infrastructure.core.api.JsonCommand;
 import org.mifosplatform.infrastructure.core.domain.AbstractAuditableCustom;
 import org.mifosplatform.useradministration.domain.AppUser;
@@ -105,8 +106,10 @@ public class MRNDetails extends AbstractAuditableCustom<AppUser, Long>{
 		final Long toOffice = command.longValueOfParameterNamed("toOffice");
 		final Long orderdQuantity = command.bigDecimalValueOfParameterNamed("orderdQuantity").longValue();
 		final Long itemMasterId = command.longValueOfParameterNamed("itemDescription");
+
+		final LocalDate requestedDate0=command.localDateValueOfParameterNamed("requestedDate");
 		
-		String startDateString = command.stringValueOfParameterNamed("requestedDate");
+		String startDateString =requestedDate0.toString()+command.stringValueOfParameterNamed("requestedTime");
 		DateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 		Date requestedDate = df.parse(startDateString);
 			

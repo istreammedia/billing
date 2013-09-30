@@ -53,6 +53,8 @@ public final class PlanCommandFromApiJsonDeserializer {
 
         final String planCode = fromApiJsonHelper.extractStringNamed("planCode", element);
         baseDataValidator.reset().parameter("planCode").value(planCode).notBlank().notExceedingLengthOf(100);
+        final String planDescription = fromApiJsonHelper.extractStringNamed("planDescription", element);
+        baseDataValidator.reset().parameter("planDescription").value(planDescription).notBlank();
         final LocalDate startDate = fromApiJsonHelper.extractLocalDateNamed("startDate", element);
         baseDataValidator.reset().parameter("startDate").value(startDate).notBlank();
         final String[] services = fromApiJsonHelper.extractArrayNamed("services", element);
@@ -61,6 +63,8 @@ public final class PlanCommandFromApiJsonDeserializer {
         baseDataValidator.reset().parameter("provisioingSystem").value(provisioingSystem).notBlank();
         final Long status = fromApiJsonHelper.extractLongNamed("status", element);
         baseDataValidator.reset().parameter("status").value(status).notNull();
+        final Long billRule = fromApiJsonHelper.extractLongNamed("billRule", element);
+        baseDataValidator.reset().parameter("billRule").value(billRule).notNull();
         final boolean isPrepaid=fromApiJsonHelper.extractBooleanNamed("isPrepaid", element);
         if(isPrepaid){
         	final String duration=fromApiJsonHelper.extractStringNamed("duration", element);

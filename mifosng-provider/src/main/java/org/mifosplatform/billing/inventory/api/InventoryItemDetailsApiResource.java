@@ -57,13 +57,11 @@ public class InventoryItemDetailsApiResource {
 	private final Set<String> RESPONSE_DATA_SERIAL_NUMBER_PARAMETERS = new HashSet<String>(Arrays.asList("serialNumber"));
 	private final Set<String> RESPONSE_DATA_GRN_IDS_PARAMETERS = new HashSet<String>(Arrays.asList("id"));
 	
-	private final String resourceNameForPermissionsGrn = "GRN";
     private final String resourceNameForPermissions = "INVENTORY";
     private final String resourceNameForPermissionsAllocation = "ALLOCATION";
 	
 	private final PlatformSecurityContext context;
 	private final DefaultToApiJsonSerializer<InventoryItemDetailsData> toApiJsonSerializerForItem;
-	private final DefaultToApiJsonSerializer<InventoryItemSerialNumberData> toApiJsonSerializerForItemSerialNumbers;
 	private final DefaultToApiJsonSerializer<InventoryItemSerialNumberData> toApiJsonSerializerForAllocationHardware;
 	private final DefaultToApiJsonSerializer<InventoryGrnData> toApiJsonSerializerForGrn;
     private final ApiRequestParameterHelper apiRequestParameterHelper;
@@ -76,7 +74,7 @@ public class InventoryItemDetailsApiResource {
 	private final SupplierReadPlatformService supplierReadPlatformService;
 
 	@Autowired
-	public InventoryItemDetailsApiResource(final PlatformSecurityContext context,final DefaultToApiJsonSerializer<InventoryItemDetailsData> toApiJsonSerializerForItem,ApiRequestParameterHelper apiRequestParameterHelper,PortfolioCommandSourceWritePlatformService commandsSourceWritePlatformService,final InventoryGrnReadPlatformService inventoryGrnReadPlatformService,final DefaultToApiJsonSerializer<InventoryGrnData> toApiJsonSerializerForGrn,InventoryItemDetailsReadPlatformService itemDetailsReadPlatformService, final DefaultToApiJsonSerializer<InventoryItemSerialNumberData> toApiJsonSerializerForItemSerialNumbers,final DefaultToApiJsonSerializer<InventoryItemDetailsAllocation> toApiJsonSerializerForItemAllocation,final DefaultToApiJsonSerializer<InventoryItemSerialNumberData> toApiJsonSerializerForAllocationHardware,
+	public InventoryItemDetailsApiResource(final PlatformSecurityContext context,final DefaultToApiJsonSerializer<InventoryItemDetailsData> toApiJsonSerializerForItem,ApiRequestParameterHelper apiRequestParameterHelper,PortfolioCommandSourceWritePlatformService commandsSourceWritePlatformService,final InventoryGrnReadPlatformService inventoryGrnReadPlatformService,final DefaultToApiJsonSerializer<InventoryGrnData> toApiJsonSerializerForGrn,InventoryItemDetailsReadPlatformService itemDetailsReadPlatformService,final DefaultToApiJsonSerializer<InventoryItemDetailsAllocation> toApiJsonSerializerForItemAllocation,final DefaultToApiJsonSerializer<InventoryItemSerialNumberData> toApiJsonSerializerForAllocationHardware,
 										   final OfficeReadPlatformService officeReadPlatformService,
 										   final ItemReadPlatformService itemReadPlatformService,
 										   SupplierReadPlatformService supplierReadPlatformService) {
@@ -87,7 +85,6 @@ public class InventoryItemDetailsApiResource {
 	    this.commandsSourceWritePlatformService = commandsSourceWritePlatformService;
 	    this.inventoryGrnReadPlatformService = inventoryGrnReadPlatformService;
 	    this.itemDetailsReadPlatformService = itemDetailsReadPlatformService;
-	    this.toApiJsonSerializerForItemSerialNumbers = toApiJsonSerializerForItemSerialNumbers;
 	    this.toApiJsonSerializerForItemAllocation = toApiJsonSerializerForItemAllocation;
 	    this.toApiJsonSerializerForAllocationHardware = toApiJsonSerializerForAllocationHardware;
 	    this.officeReadPlatformService = officeReadPlatformService;
@@ -199,19 +196,22 @@ public class InventoryItemDetailsApiResource {
 	@Produces({MediaType.APPLICATION_JSON})
 	public String retriveItemSerialNumbers(@PathParam("oneTimeSaleId") final Long oneTimeSaleId, @Context final UriInfo uriInfo){
 		
+
+		
 		context.authenticatedUser().validateHasReadPermission(resourceNameForPermissionsAllocation);
 		
 		
-		List<QuantityData> itemSerialNumbers = this.itemDetailsReadPlatformService.retriveSerialNumbers(oneTimeSaleId);
+		List<String> itemSerialNumbers = this.itemDetailsReadPlatformService.retriveSerialNumbers(oneTimeSaleId);
 		QuantityData quantityData = this.itemDetailsReadPlatformService.retriveQuantity(oneTimeSaleId);
 		ItemMasterIdData itemMasterIdData = this.itemDetailsReadPlatformService.retriveItemMasterId(oneTimeSaleId);
-		InventoryItemSerialNumberData data=new InventoryItemSerialNumberData(itemSerialNumbers, quantityData.getQuantity(),itemMasterIdData.getItemMasterId());
-		  //List<InventoryItemSerialNumberData> datas=new ArrayList<InventoryItemSerialNumberData>();
-		  
+		
+		InventoryItemSerialNumberData allocationData = this.itemDetailsReadPlatformService.retriveAllocationData(itemSerialNumbers,quantityData,itemMasterIdData);
+		
 		final ApiRequestJsonSerializationSettings settings = apiRequestParameterHelper.process(uriInfo.getQueryParameters());
-		return this.toApiJsonSerializerForAllocationHardware.serialize(settings, data, RESPONSE_DATA_SERIAL_NUMBER_PARAMETERS);
+		return this.toApiJsonSerializerForAllocationHardware.serialize(settings, allocationData, RESPONSE_DATA_SERIAL_NUMBER_PARAMETERS);
 		//return "SYED MUJEEB RAHMAN";
 		
+	
 	}
 	
 	
