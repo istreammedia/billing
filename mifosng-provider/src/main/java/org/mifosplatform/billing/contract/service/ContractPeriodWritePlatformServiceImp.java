@@ -69,7 +69,7 @@ public class ContractPeriodWritePlatformServiceImp implements ContractPeriodWrit
 			try
 			{
 				  context.authenticatedUser();
-		            this.fromApiJsonDeserializer.validateForUpdate(command.json());
+		            this.fromApiJsonDeserializer.validateForCreate(command.json());
 		            final Contract contract = retrieveCodeBy(contractId);
 
 	         final Map<String, Object> changes = contract.update(command);

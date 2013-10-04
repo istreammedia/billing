@@ -52,7 +52,8 @@ public static TicketDetail fromJson(final JsonCommand command) throws ParseExcep
 	Integer assignedTo = command.integerValueOfParameterNamed("assignedTo");
 	String description  = command.stringValueOfParameterNamed("description");
 	
-	String startDateString = command.stringValueOfParameterNamed("ticketDate");
+	LocalDate startDateString0=command.localDateValueOfParameterNamed("ticketDate");
+	String startDateString =startDateString0.toString()+command.stringValueOfParameterNamed("ticketTime");
 	DateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 	Date ticketDate = df.parse(startDateString);
 	

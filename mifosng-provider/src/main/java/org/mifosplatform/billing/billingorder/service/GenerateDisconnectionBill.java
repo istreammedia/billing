@@ -114,10 +114,22 @@ public class GenerateDisconnectionBill {
 			startDate = new LocalDate(billingOrderData.getNextBillableDate());
 			this.endDate = disconnectionDate;
 			billEndDate = new LocalDate(billingOrderData.getBillEndDate());
+			invoiceTillDate = new LocalDate(billingOrderData.getInvoiceTillDate());
 			
-			int numberOfMonths = Months.monthsBetween(endDate, billEndDate).getMonths();
-			LocalDate tempBillEndDate = billEndDate.minusMonths(numberOfMonths);
-			int numberOfDays = Days.daysBetween(endDate, tempBillEndDate).getDays();
+			int numberOfMonths = Months.monthsBetween(endDate, invoiceTillDate).getMonths();
+			
+			int numberOfDays = 0;
+			
+			if (billingOrderData.getBillingAlign().equalsIgnoreCase("N")) {
+				
+				LocalDate tempBillEndDate = invoiceTillDate.minusMonths(numberOfMonths);
+				numberOfDays = Days.daysBetween(endDate, tempBillEndDate).getDays();
+				
+			}else if(billingOrderData.getBillingAlign().equalsIgnoreCase("Y")){
+				
+				LocalDate tempBillEndDate = invoiceTillDate.minusMonths(numberOfMonths).dayOfMonth().withMaximumValue();
+				numberOfDays = Days.daysBetween(endDate, tempBillEndDate).getDays();
+			}
 			
 			price = billingOrderData.getPrice();
 			
@@ -128,25 +140,25 @@ public class GenerateDisconnectionBill {
 			disconnectionCreditPerday = price.divide(new BigDecimal(30), 2,RoundingMode.HALF_UP);
 			
 			if(numberOfDays!=0){
-				disconnectionCreditForDays = disconnectionCreditForDays.multiply(new BigDecimal(numberOfDays));
+				disconnectionCreditForDays = disconnectionCreditPerday.multiply(new BigDecimal(numberOfDays));
 			}
 			
 			price = disconnectionCreditForMonths.add(disconnectionCreditForDays);
 			
+			billingOrderData.setChargeType("DC");
+			
 		}
 
-		this.endDate=disconnectionDate;
-		invoiceTillDate =endDate;
+		this.startDate = disconnectionDate;
+		this.endDate = invoiceTillDate;
+		this.nextbillDate = invoiceTillDate.plusDays(1);
 		
-		nextbillDate = invoiceTillDate.plusDays(1);
-		startDate=new LocalDate(billingOrderData.getStartDate());
 		if(this.isDiscountApplicable(startDate,discountMasterData,endDate)){
 			
 			discountMasterData = this.calculateDiscount(discountMasterData, discountAmount, price);
 			
 		}
 
-		// List<InvoiceTax> listOfTaxes = this.calculateTax(billingOrderData,price);
 		List<InvoiceTaxCommand> listOfTaxes = this.calculateTax(billingOrderData,price);
 		
 		return this.createBillingOrderCommand(billingOrderData, startDate, endDate, invoiceTillDate, nextbillDate, price, listOfTaxes,discountMasterData);
@@ -354,7 +366,7 @@ public class GenerateDisconnectionBill {
 		if(isDiscountPercentage(discountMasterData)){
 			
 			 
-			discountAmount = this.calculateDiscountPercentage(discountMasterData.getdiscountRate(), chargePrice);
+			discountAmount = this.calculateDiscountPercentage(discountMasterData.getDiscountValue(), chargePrice);
 			discountMasterData.setDiscountAmount(discountAmount);
 			chargePrice = this.chargePriceNotLessThanZero(chargePrice, discountAmount);
 			discountMasterData.setDiscountedChargeAmount(chargePrice);
@@ -363,7 +375,7 @@ public class GenerateDisconnectionBill {
 		
 		if(isDiscountFlat(discountMasterData)){
 							
-			chargePrice = this.calculateDiscountFlat(discountMasterData.getdiscountRate(), chargePrice);
+			chargePrice = this.calculateDiscountFlat(discountMasterData.getDiscountValue(), chargePrice);
 			discountMasterData.setDiscountedChargeAmount(chargePrice);
 		}
 		return discountMasterData;

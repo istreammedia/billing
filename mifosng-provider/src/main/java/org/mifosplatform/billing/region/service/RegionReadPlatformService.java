@@ -15,5 +15,6 @@ public interface RegionReadPlatformService {
 	RegionData getSingleRegionDetails(Long regionId);
 
 	List<RegionDetailsData> getRegionDetailsData(Long regionId);
+	List<RegionDetailsData> getCountryRegionDetails(Long regionId,Long stateId);
 
 }

@@ -49,15 +49,15 @@ public class PlanServicesApiResource {
 		        this.apiRequestParameterHelper = apiRequestParameterHelper;
 		        this.commandsSourceWritePlatformService = commandsSourceWritePlatformService;
 		        this.planServiceReadPlatformService=planServiceReadPlatformService;
-		       
 		    }
 
 	        @GET
 	        @Path("{clientId}")
 			@Consumes({ MediaType.APPLICATION_JSON })
 			@Produces({ MediaType.APPLICATION_JSON })
-			public String getClientPlanService(@PathParam("clientId") final Long clientId,@QueryParam("serviceType") final String serviceType,
-					@Context final UriInfo uriInfo) {
+			public String getClientPlanService(@PathParam("clientId") final Long clientId,
+					@QueryParam("serviceType") final String serviceType,@Context final UriInfo uriInfo) {
+	        	
 			   context.authenticatedUser().validateHasReadPermission(resourceNameForPermissions);
 				final Collection<PlanServiceData> masterOptionsDatas = this.planServiceReadPlatformService.retrieveClientPlanService(clientId,serviceType);
 				final ApiRequestJsonSerializationSettings settings = apiRequestParameterHelper.process(uriInfo.getQueryParameters());

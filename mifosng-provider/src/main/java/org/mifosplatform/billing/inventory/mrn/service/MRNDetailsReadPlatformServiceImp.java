@@ -160,9 +160,11 @@ public class MRNDetailsReadPlatformServiceImp implements MRNDetailsReadPlatformS
 		return jdbcTemplate.query(sql, rowMapper);
 	}
 	
+	
+	
 	@Override
 	public Collection<MRNDetailsData> retriveMrnIds() {
-		final String sql = "select id as mrnId,(select item_description from b_item_master where id=item_master_id) as itemDescription, item_master_id as itemMasterId from b_mrn order by requested_date desc";
+		final String sql = "select id as mrnId,(select item_description from b_item_master where id=item_master_id) as itemDescription, item_master_id as itemMasterId from b_mrn where orderd_quantity>received_quantity order by requested_date desc";//"select id as mrnId,(select item_description from b_item_master where id=item_master_id) as itemDescription, item_master_id as itemMasterId from b_mrn order by requested_date desc";
 		MRNDetailsMrnIDsMapper rowMapper = new MRNDetailsMrnIDsMapper();
 		return jdbcTemplate.query(sql,rowMapper);
 	}

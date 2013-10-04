@@ -5,8 +5,8 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
 
-import org.apache.xmlbeans.impl.xb.xsdschema.Public;
 import org.joda.time.LocalDate;
+import org.mifosplatform.billing.contract.data.SubscriptionData;
 import org.mifosplatform.billing.order.data.OrderData;
 import org.mifosplatform.billing.order.data.OrderHistoryData;
 import org.mifosplatform.billing.order.data.OrderPriceData;
@@ -824,7 +824,57 @@ return null;
 					}
 			}
 
-			
+					@Override
+					public List<OrderData> getActivePlans(Long clientId,	String planType) {
+						
+
+						try {
+							final ActivePlanMapper mapper = new ActivePlanMapper();
+							
+							 String sql =null;
+							if(planType!=null)
+							  {
+								if(planType.equalsIgnoreCase("prepaid")){
+									  sql = "select " + mapper.activePlanLookupSchema()+" AND p.is_prepaid = 'Y'";
+								}else{
+									  sql = "select " + mapper.activePlanLookupSchema()+" AND p.is_prepaid = 'N'";
+								}
+							  }else{
+								    sql = "select " + mapper.activePlanLookupSchema();
+							  }
+
+							
+
+							return jdbcTemplate.query(sql, mapper, new Object[] { clientId});
+							} catch (EmptyResultDataAccessException e) {
+							return null;
+							}
+
+							}
+
+					private static final class ActivePlanMapper implements RowMapper<OrderData> {
+
+						public String activePlanLookupSchema() {
+						return "o.id AS orderId,p.plan_code AS planCode,p.plan_description as planDescription,o.billing_frequency AS billingFreq," +
+								"c.contract_period as contractPeriod,(SELECT sum(ol.price) AS price FROM b_order_price ol"
+					+" WHERE o.id = ol.order_id)  AS price  FROM b_orders o, b_plan_master p, b_contract_period c WHERE client_id =?" +
+								" AND p.id = o.plan_id  and o.contract_period=c.id ";
+						}
+
+						@Override
+						public OrderData mapRow(final ResultSet rs, @SuppressWarnings("unused") final int rowNum) throws SQLException {
+
+						final Long orderId = rs.getLong("orderId");
+						final String planCode=rs.getString("planCode");
+						final String planDescription=rs.getString("planDescription");
+						final String billingFreq=rs.getString("billingFreq");
+						final String contractPeriod=rs.getString("contractPeriod");
+						final Double price=rs.getDouble("price");
+						
+
+						return new OrderData(orderId,planCode,planDescription,billingFreq,contractPeriod,price);
+						}
+				}
 
 			
 	}

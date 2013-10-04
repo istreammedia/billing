@@ -11,6 +11,7 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.Table;
 
+import org.joda.time.LocalDate;
 import org.mifosplatform.billing.ticketmaster.command.TicketMasterCommand;
 import org.mifosplatform.infrastructure.core.api.JsonCommand;
 
@@ -76,7 +77,9 @@ public static TicketMaster fromJson(final JsonCommand command) throws ParseExcep
 	Integer assignedTo = command.integerValueOfParameterNamed("assignedTo");
 	
 	
-	String startDateString = command.stringValueOfParameterNamed("ticketDate");
+//	String startDateString = command.stringValueOfParameterNamed("ticketDate");
+	LocalDate startDateString0=command.localDateValueOfParameterNamed("ticketDate");
+	String startDateString =startDateString0.toString()+command.stringValueOfParameterNamed("ticketTime");
 	DateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 	Date ticketDate = df.parse(startDateString);
 	

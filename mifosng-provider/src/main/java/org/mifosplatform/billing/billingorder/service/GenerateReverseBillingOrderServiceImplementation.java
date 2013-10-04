@@ -109,6 +109,7 @@ public class GenerateReverseBillingOrderServiceImplementation implements
 		for (BillingOrderCommand billingOrderCommand : billingOrderCommands) {
 			BigDecimal netChargeTaxAmount = BigDecimal.ZERO;
 			BigDecimal discountAmount = billingOrderCommand.getDiscountMasterData().getDiscountAmount();
+			
 			BigDecimal netChargeAmount = billingOrderCommand.getPrice().subtract(discountAmount);
 			
 			
@@ -138,7 +139,7 @@ public class GenerateReverseBillingOrderServiceImplementation implements
 				
 				if(isTaxInclusive(billingOrderCommand.getTaxInclusive())){
 					netChargeAmount = netChargeAmount.subtract(netChargeTaxAmount);
-					charge.setNetChargeAmount(netChargeAmount);
+					charge.setNetChargeAmount(netChargeAmount.negate());
 				}
 			}
 			netTaxAmount = netTaxAmount.add(netChargeTaxAmount);

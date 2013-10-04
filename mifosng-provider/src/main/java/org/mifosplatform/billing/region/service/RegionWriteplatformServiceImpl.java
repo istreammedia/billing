@@ -3,14 +3,12 @@ package org.mifosplatform.billing.region.service;
 import java.util.List;
 import java.util.Map;
 
-import org.mifosplatform.accounting.autoposting.api.AutoPostingJsonInputParams;
-import org.mifosplatform.accounting.autoposting.exception.AutoPostingDuplicateException;
 import org.mifosplatform.accounting.autoposting.exception.RegionDuplicateException;
 import org.mifosplatform.billing.epgprogramguide.serialization.RegionFromApiJsonDeserializer;
 import org.mifosplatform.billing.inventory.service.InventoryItemDetailsWritePlatformServiceImp;
-import org.mifosplatform.billing.plan.data.ServiceData;
-import org.mifosplatform.billing.plan.domain.Plan;
-import org.mifosplatform.billing.plan.domain.PlanDetails;
+import org.mifosplatform.billing.order.exceptions.CountryRegionDuplicateException;
+import org.mifosplatform.billing.order.exceptions.NoOrdersFoundException;
+import org.mifosplatform.billing.region.data.RegionDetailsData;
 import org.mifosplatform.billing.region.domain.RegionDetails;
 import org.mifosplatform.billing.region.domain.RegionJpaRepository;
 import org.mifosplatform.billing.region.domain.RegionMaster;
@@ -30,21 +28,25 @@ import org.springframework.stereotype.Service;
 import com.google.gson.JsonArray;
 
 
+
 @Service
 public class RegionWriteplatformServiceImpl implements RegionWriteplatformService{
 	
 	private final static Logger logger = (Logger) LoggerFactory.getLogger(InventoryItemDetailsWritePlatformServiceImp.class);
 	private final PlatformSecurityContext context;
 	private final RegionJpaRepository regionJpaRepository;
-	private final FromJsonHelper fromJsonHelper;
 	private final  RegionFromApiJsonDeserializer apiJsonDeserializer;
+	private final RegionReadPlatformService  regionReadPlatformService;
+	
 	
 	@Autowired
-	public RegionWriteplatformServiceImpl(final PlatformSecurityContext context, final RegionJpaRepository regionJpaRepository, final FromJsonHelper fromJsonHelper,final RegionFromApiJsonDeserializer jsonDeserializer) {
+	public RegionWriteplatformServiceImpl(final PlatformSecurityContext context, final RegionJpaRepository regionJpaRepository,
+			final RegionFromApiJsonDeserializer jsonDeserializer,final RegionReadPlatformService regionReadPlatformService) {
+		
 		this.context = context;
 		this.regionJpaRepository = regionJpaRepository;
-		this.fromJsonHelper = fromJsonHelper;
 		this.apiJsonDeserializer = jsonDeserializer;
+		this.regionReadPlatformService=regionReadPlatformService;
 	}
 
 
@@ -69,7 +71,10 @@ public class RegionWriteplatformServiceImpl implements RegionWriteplatformServic
 					 
 					 final Long countryId = command.longValueOfParameterNamed("countryId");
 		                final Long stateId = Long.valueOf(id);
-		               
+		                List<RegionDetailsData> detailsDatas=this.regionReadPlatformService.getCountryRegionDetails(countryId, stateId);
+		                if(!detailsDatas.isEmpty()){
+		                	throw new CountryRegionDuplicateException();
+		                }
 		                RegionDetails detail=new RegionDetails(countryId,stateId);
 		                regionMaster.addRegionDetails(detail);
 				  }

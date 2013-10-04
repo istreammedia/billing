@@ -2,6 +2,7 @@ package org.mifosplatform.billing.order.service;
 
 import java.util.List;
 
+import org.mifosplatform.billing.contract.data.SubscriptionData;
 import org.mifosplatform.billing.order.data.OrderData;
 import org.mifosplatform.billing.order.data.OrderHistoryData;
 import org.mifosplatform.billing.order.data.OrderPriceData;
@@ -28,6 +29,8 @@ public interface OrderReadPlatformService {
 	List<OrderData> retrieveClientOrderDetails(Long clientId);
 
 	List<OrderHistoryData> retrieveOrderHistoryDetails(Long orderId);
+
+	List<OrderData> getActivePlans(Long clientId, String planType);
 
 
 

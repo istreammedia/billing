@@ -110,19 +110,18 @@ public class OrderWritePlatformServiceImpl implements OrderWritePlatformService 
 	}
 	
 	@Override
-	public CommandProcessingResult createOrder(Long clientId,
-			JsonCommand command) {
-	try{
+	public CommandProcessingResult createOrder(Long clientId,JsonCommand command) {
+	
+		try{
 			context.authenticatedUser();
 			this.fromApiJsonDeserializer.validateForCreate(command.json());
-			
 			List<OrderLine> serviceDetails = new ArrayList<OrderLine>();
 			List<OrderPrice> orderprice = new ArrayList<OrderPrice>();
 			List<PriceData> datas = new ArrayList<PriceData>();
 			
-			 OrderReadPlatformImpl obj = new OrderReadPlatformImpl(context,jdbcTemplate);
+			     OrderReadPlatformImpl obj = new OrderReadPlatformImpl(context,jdbcTemplate);
                  Order order=Order.fromJson(clientId,command);
-			   Plan plan = this.planRepository.findOne(order.getPlanId());
+			     Plan plan = this.planRepository.findOne(order.getPlanId());
 			   
 			//   String clientRegion=this.clientRegionDetails.getTheClientRegionDetails(clientId);
 			List<ServiceData> details = obj.retrieveAllServices(order.getPlanId());
@@ -130,19 +129,24 @@ public class OrderWritePlatformServiceImpl implements OrderWritePlatformService 
 			datas=obj.retrieveAllPrices(order.getPlanId(),order.getBillingFrequency(),clientId);
 			
 			 if(datas.isEmpty()){
+				 
 				 datas=obj.retrieveDefaultPrices(order.getPlanId(),order.getBillingFrequency(),clientId);
 			  }
 			 
 			 if(datas.isEmpty()){
+				 
 				  throw new NoRegionalPriceFound();
 			  }
-			LocalDate endDate = null;
+			
+			 LocalDate endDate = null;
 			Contract subscriptionData = this.subscriptionRepository.findOne(order.getContarctPeriod());
 			LocalDate startDate=new LocalDate(order.getStartDate());
 			Long orderStatus=null;
+			
 			if(plan.getProvisionSystem().equalsIgnoreCase("None")){
 				
 				orderStatus = OrderStatusEnumaration.OrderStatusType(StatusTypeEnum.ACTIVE).getId();
+			
 			}else{
 			
 				orderStatus = OrderStatusEnumaration.OrderStatusType(StatusTypeEnum.PENDING).getId();
@@ -154,12 +158,12 @@ public class OrderWritePlatformServiceImpl implements OrderWritePlatformService 
 					order.getContarctPeriod(), serviceDetails, orderprice,order.getbillAlign(),UserActionStatusTypeEnum.ACTIVATION.toString());
 			
 			BigDecimal priceforHistory=BigDecimal.ZERO;
-			Long serviceId=new Long(0);
+			
 			for (PriceData data : datas) {
 				
 				LocalDate billstartDate = startDate;
 				LocalDate billEndDate = null;
-				BigDecimal planPrice=BigDecimal.ZERO;
+				
 				
 				// end date is null for rc
 				if (data.getChagreType().equalsIgnoreCase("RC")	&& endDate != null) {
@@ -274,6 +278,7 @@ public class OrderWritePlatformServiceImpl implements OrderWritePlatformService 
 
 	private void handleCodeDataIntegrityIssues(JsonCommand command,DataIntegrityViolationException dve) {
 	}
+	
 	@Override
 	public CommandProcessingResult updateOrderPrice(Long orderId,JsonCommand command) {
 		try
@@ -368,7 +373,7 @@ public class OrderWritePlatformServiceImpl implements OrderWritePlatformService 
 				orderStatus = OrderStatusEnumaration.OrderStatusType(StatusTypeEnum.PENDING).getId();
 			}
 	         
-	      //   this.reverseInvoice.reverseInvoiceServices(orderId, order.getClientId(),new LocalDate());
+	         this.reverseInvoice.reverseInvoiceServices(orderId, order.getClientId(),new LocalDate());
 			order.update(command,orderStatus);
 			order.setuerAction(UserActionStatusTypeEnum.DISCONNECTION.toString());
 			this.orderRepository.save(order);

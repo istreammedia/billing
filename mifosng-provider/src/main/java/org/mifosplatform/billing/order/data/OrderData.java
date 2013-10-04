@@ -15,7 +15,8 @@ public class OrderData {
 	private Long pcid;
 	private Long clientId;
 	private String service_code;
-	private String plan_code;
+	private String planCode;
+	private String planDescription;
 	private String chargeCode;
 	private double price;
 	private String variant;
@@ -46,7 +47,7 @@ public class OrderData {
 		if (data != null) {
 			this.id = data.getId();
 			this.pdid = data.getPdid();
-			this.plan_code = data.getPlan_code();
+			this.planCode = data.getPlan_code();
 			this.status = null;
 			this.period = data.getPeriod();
 			this.pcid = data.getPcid();
@@ -68,7 +69,7 @@ public class OrderData {
 			String contractPeriod, String isprepaid, String allowtopup,String userAction) {
 		this.id = id;
 		this.pdid = planId;
-		this.plan_code = plancode;
+		this.planCode = plancode;
 		this.status = status;
 		this.cancelledStatus = "DISCONNECTED";
 		this.period = null;
@@ -108,6 +109,18 @@ public class OrderData {
 	public OrderData(Long clientId, List<OrderData> clientOrders) {
 		this.clientId=clientId;
 		this.clientOrders=clientOrders;
+	}
+
+	public OrderData(Long orderId, String planCode, String planDescription,
+			String billingFreq, String contractPeriod, Double price) {
+                 
+		            this.id=orderId;
+		            this.planCode=planCode;
+		            this.planDescription=planDescription;
+		            this.billingFrequency=billingFreq;
+		            this.contractPeriod=contractPeriod;
+		            this.price=price;
+		           
 	}
 
 	public Long getId() {
@@ -155,7 +168,7 @@ public class OrderData {
 	}
 
 	public String getPlan_code() {
-		return plan_code;
+		return planCode;
 	}
 
 	public double getPrice() {

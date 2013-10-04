@@ -29,7 +29,7 @@ import com.google.gson.reflect.TypeToken;
 public class ClientProspectCommandFromApiJsonDeserializer {
 
 	
-	private final Set<String> supportedParameters = new HashSet<String>(Arrays.asList("prospectType","firstName","middleName","lastName","homePhoneNumber","workPhoneNumber","mobileNumber","email","sourceOfPublicity","preferredCallingTime","note","address","streetArea","cityDistrict","state","country","locale","preferredPlan","status","statusRemark","callStatus","assignedTo","notes","isDeleted","zipCode"));
+	private final Set<String> supportedParameters = new HashSet<String>(Arrays.asList("sourceOther","prospectType","firstName","middleName","lastName","homePhoneNumber","workPhoneNumber","mobileNumber","email","sourceOfPublicity","preferredCallingTime","note","address","streetArea","cityDistrict","state","country","locale","preferredPlan","status","statusRemark","callStatus","assignedTo","notes","isDeleted","zipCode"));
 	
 	private final FromJsonHelper fromApiJsonHelper;
 

@@ -45,7 +45,9 @@ public class PricingData {
 		this.serviceData=serviceData;
 		this.chargevariant=chargevariant;
 		this.discountdata=data;
+		if(planCode!=null){
 		this.planCode=planCode;
+		}
 		this.planId=planId;
 		this.priceRegionData=priceRegionData;
 

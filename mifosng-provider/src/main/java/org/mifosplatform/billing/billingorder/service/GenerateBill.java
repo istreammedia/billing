@@ -74,7 +74,7 @@ public class GenerateBill {
 	// prorata monthly bill
 	public BillingOrderCommand getProrataMonthlyFirstBill(
 			BillingOrderData billingOrderData, DiscountMasterData discountMasterData) {
-		BigDecimal discountAmount = BigDecimal.ZERO.setScale(Integer.parseInt(roundingDecimal()));
+		BigDecimal discountAmount = BigDecimal.ZERO;
 		startDate = new LocalDate(billingOrderData.getBillStartDate());
 
 		endDate = startDate.dayOfMonth().withMaximumValue();
@@ -118,7 +118,7 @@ public class GenerateBill {
 
 	public BillingOrderCommand getNextMonthBill(
 			BillingOrderData billingOrderData, DiscountMasterData discountMasterData) {
-		BigDecimal discountAmount = BigDecimal.ZERO.setScale(Integer.parseInt(roundingDecimal()));
+		BigDecimal discountAmount = BigDecimal.ZERO;
 		startDate = new LocalDate(billingOrderData.getNextBillableDate());
 		endDate = new LocalDate(billingOrderData.getInvoiceTillDate())
 				.plusMonths(billingOrderData.getChargeDuration()).dayOfMonth()
@@ -183,7 +183,7 @@ public class GenerateBill {
 			endDate = startDate
 					.plusMonths(billingOrderData.getChargeDuration())
 					.minusDays(1);
-			price = billingOrderData.getPrice().setScale(Integer.parseInt(roundingDecimal()));;
+			price = billingOrderData.getPrice();
 		} else if (billingOrderData.getInvoiceTillDate() != null) {
 
 			startDate = new LocalDate(billingOrderData.getNextBillableDate());
@@ -223,7 +223,7 @@ public class GenerateBill {
 	// Pro rate Weekly Bill
 	public BillingOrderCommand getProrataWeeklyFirstBill(
 			BillingOrderData billingOrderData, DiscountMasterData discountMasterData) {
-		BigDecimal discountAmount = BigDecimal.ZERO.setScale(Integer.parseInt(roundingDecimal()));;
+		BigDecimal discountAmount = BigDecimal.ZERO;
 		startDate = new LocalDate(billingOrderData.getBillStartDate());
 		endDate = startDate.dayOfWeek().withMaximumValue();
 
@@ -261,7 +261,7 @@ public class GenerateBill {
 
 	public BillingOrderCommand getNextWeeklyBill(
 			BillingOrderData billingOrderData, DiscountMasterData discountMasterData) {
-		BigDecimal discountAmount = BigDecimal.ZERO.setScale(Integer.parseInt(roundingDecimal()));;
+		BigDecimal discountAmount = BigDecimal.ZERO;
 		startDate = new LocalDate(billingOrderData.getNextBillableDate());
 
 		endDate = startDate.dayOfWeek().withMaximumValue();

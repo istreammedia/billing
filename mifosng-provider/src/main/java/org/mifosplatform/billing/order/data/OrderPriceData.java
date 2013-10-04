@@ -76,7 +76,15 @@ public class OrderPriceData {
 			else{
 				 Calendar cal = Calendar.getInstance();
 				    cal.setTime(billStartDate.toDate());
+				 if(cal.get(5) == 2 ){
+					 day = "Every "+cal.get(Calendar.DAY_OF_MONTH)+"nd of the Month";
+				 }else if(cal.get(5) == 3){
+					 day = "Every "+cal.get(Calendar.DAY_OF_MONTH)+"rd of the Month";
+				 }
+				 else{
+					 
 				     day = "Every "+cal.get(Calendar.DAY_OF_MONTH)+"th of the Month";
+				 }
 				    return day;
 			}
 		}

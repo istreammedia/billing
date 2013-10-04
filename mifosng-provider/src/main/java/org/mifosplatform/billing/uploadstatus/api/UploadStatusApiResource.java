@@ -5,7 +5,6 @@ import java.io.InputStream;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
@@ -22,6 +21,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Response.ResponseBuilder;
 import javax.ws.rs.core.UriInfo;
 
 import org.joda.time.LocalDate;
@@ -30,18 +30,17 @@ import org.joda.time.format.DateTimeFormatter;
 import org.mifosplatform.billing.uploadstatus.command.UploadStatusCommand;
 import org.mifosplatform.billing.uploadstatus.data.UploadStatusData;
 import org.mifosplatform.billing.uploadstatus.domain.UploadStatus;
+import org.mifosplatform.billing.uploadstatus.domain.UploadStatusRepository;
 import org.mifosplatform.billing.uploadstatus.service.UploadStatusReadPlatformService;
 import org.mifosplatform.billing.uploadstatus.service.UploadStatusWritePlatformService;
 import org.mifosplatform.commands.service.PortfolioCommandSourceWritePlatformService;
 import org.mifosplatform.infrastructure.core.api.ApiConstants;
-import org.mifosplatform.infrastructure.core.api.ApiParameterHelper;
 import org.mifosplatform.infrastructure.core.api.ApiRequestParameterHelper;
 import org.mifosplatform.infrastructure.core.data.CommandProcessingResult;
 import org.mifosplatform.infrastructure.core.serialization.ApiRequestJsonSerializationSettings;
 import org.mifosplatform.infrastructure.core.serialization.DefaultToApiJsonSerializer;
 import org.mifosplatform.infrastructure.core.serialization.ToApiJsonSerializer;
 import org.mifosplatform.infrastructure.core.service.FileUtils;
-import org.mifosplatform.infrastructure.documentmanagement.command.DocumentCommand;
 import org.mifosplatform.infrastructure.security.service.PlatformSecurityContext;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
@@ -67,8 +66,8 @@ public class UploadStatusApiResource {
 	
 	@Autowired
 	private UploadStatusWritePlatformService uploadStatusWritePlatformService;
-	//@Autowired
-	//private PortfolioApiDataBillingConversionService apiDataConversionService;
+	@Autowired
+	private UploadStatusRepository uploadStatusRepository;
 	
 	
 	//@Autowired
@@ -108,10 +107,10 @@ public class UploadStatusApiResource {
 	    @Produces({ MediaType.APPLICATION_JSON })
 	    public String retrieveUploadFiles( @Context final UriInfo uriInfo) {
 		 context.authenticatedUser().validateHasReadPermission(resourceNameForPermissions);
-
+/*
 	        final Collection<UploadStatusData> codes = this.readPlatformService.retrieveAllCodes();
 		 final Set<String> responseParameters = ApiParameterHelper.extractFieldsForResponseIfProvided(uriInfo.getQueryParameters());
-			final boolean prettyPrint = ApiParameterHelper.prettyPrint(uriInfo.getQueryParameters());
+			final boolean prettyPrint = ApiParameterHelper.prettyPrint(uriInfo.getQueryParameters());*/
 
 			final List<UploadStatusData> uploadstatusdata= this.readPlatformService.retrieveAllUploadStatusData();			
 			ApiRequestJsonSerializationSettings  settings = apiRequestParameterHelper.process(uriInfo.getQueryParameters());
@@ -138,9 +137,9 @@ public class UploadStatusApiResource {
 	            @FormDataParam("status") String name, @FormDataParam("description") String description) {
 
 	        FileUtils.validateFileSizeWithinPermissibleRange(fileSize, name, ApiConstants.MAX_FILE_UPLOAD_SIZE_IN_MB);
-	        int i;inputStreamObject=inputStream;
-	        DocumentCommand documentCommand = new DocumentCommand(null, null, null, null, name, fileDetails.getFileName(), fileSize,
-	        bodyPart.getMediaType().toString(), description, null);
+	        inputStreamObject=inputStream;
+	        //DocumentCommand documentCommand = new DocumentCommand(null, null, null, null, name, fileDetails.getFileName(), fileSize,
+	        //bodyPart.getMediaType().toString(), description, null);
 	        DateFormat dateFormat = new SimpleDateFormat("dd MMMM yyyy");
 	        Date date = new Date();
 	        final DateTimeFormatter dtf = DateTimeFormat.forPattern("dd MMMM yyyy");
@@ -179,10 +178,24 @@ public class UploadStatusApiResource {
 		//OrdersCommand command =
 		// this.apiDataConversionService.convertJsonToOrderCommand(null,null,jsonRequestBody);
 		ApiRequestJsonSerializationSettings settings = apiRequestParameterHelper.process(uriInfo.getQueryParameters());
-		CommandProcessingResult entityIdentifier = this.uploadStatusWritePlatformService.updateUploadStatus(uploadStatusId,settings);
+		CommandProcessingResult entityIdentifier = this.uploadStatusWritePlatformService.updateUploadStatus(uploadStatusId,new Integer(0),settings);
 		return Response.ok().entity(entityIdentifier).build();
 		
 	}
 	
+	@GET
+	@Path("{uploadfileId}/print")
+	 @Consumes({ MediaType.APPLICATION_JSON })
+    @Produces({ MediaType.APPLICATION_OCTET_STREAM })
+	public Response downloaedFile(@PathParam("uploadfileId") final Long id) {
+		UploadStatus uploadStatus = this.uploadStatusRepository.findOne(id);
+		String printFileName = uploadStatus.getUploadFilePath();
+		File file = new File(printFileName);
+		ResponseBuilder response = Response.ok(file);
+		response.header("Content-Disposition", "attachment; filename=\""+ printFileName + "\"");
+//		response.header("Content-Type", "application/vnd.ms-excel");
+        response.header("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+		return response.build();
+	}
 	
 }

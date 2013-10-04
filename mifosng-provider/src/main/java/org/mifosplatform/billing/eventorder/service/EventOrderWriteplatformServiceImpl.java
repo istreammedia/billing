@@ -14,6 +14,7 @@ import org.mifosplatform.billing.eventorder.domain.EventOrderRepository;
 import org.mifosplatform.billing.eventorder.domain.EventOrderdetials;
 import org.mifosplatform.billing.eventorder.exception.InsufficientAmountException;
 import org.mifosplatform.billing.media.domain.MediaAsset;
+import org.mifosplatform.billing.media.exceptions.NoEventMasterFoundException;
 import org.mifosplatform.billing.media.exceptions.NoMoviesFoundException;
 import org.mifosplatform.billing.mediadetails.domain.MediaAssetRepository;
 import org.mifosplatform.billing.mediadetails.domain.MediaassetLocation;
@@ -47,7 +48,6 @@ public class EventOrderWriteplatformServiceImpl implements
 	private final MediaDeviceReadPlatformService deviceReadPlatformService;
 	private final ClientBalanceReadPlatformService balanceReadPlatformService;
 	private final EventDetailsRepository eventDetailsRepository;
-	private final PrepareRequestWriteplatformService prepareRequestWriteplatformService;
 	private final TransactionHistoryWritePlatformService transactionHistoryWritePlatformService;
 
 	@Autowired
@@ -56,8 +56,7 @@ public class EventOrderWriteplatformServiceImpl implements
 			final InvoiceOneTimeSale invoiceOneTimeSale,final OneTimeSaleReadPlatformService oneTimeSaleReadPlatformService,
 			final EventMasterRepository eventMasterRepository,final MediaAssetRepository mediaAssetRepository,
 			final MediaDeviceReadPlatformService deviceReadPlatformService,	final ClientBalanceReadPlatformService balanceReadPlatformService,
-			final EventDetailsRepository eventDetailsRepository,final PrepareRequestWriteplatformService prepareRequestWriteplatformService,
-			final TransactionHistoryWritePlatformService transactionHistoryWritePlatformService) {
+			final EventDetailsRepository eventDetailsRepository,final TransactionHistoryWritePlatformService transactionHistoryWritePlatformService) {
 		
 		this.context = context;
 		this.eventOrderRepository = eventOrderRepository;
@@ -69,7 +68,6 @@ public class EventOrderWriteplatformServiceImpl implements
 		this.deviceReadPlatformService = deviceReadPlatformService;
 		this.balanceReadPlatformService = balanceReadPlatformService;
 		this.eventDetailsRepository=eventDetailsRepository;
-		this.prepareRequestWriteplatformService=prepareRequestWriteplatformService;
 		this.transactionHistoryWritePlatformService = transactionHistoryWritePlatformService;
 
 	}
@@ -104,6 +102,10 @@ public class EventOrderWriteplatformServiceImpl implements
 			final String formatType = command.stringValueOfParameterNamed("formatType");
 			final String optType=command.stringValueOfParameterNamed("optType");
 			EventMaster eventMaster = this.eventMasterRepository.findOne(eventId);
+			if(eventMaster == null){
+				throw new NoEventMasterFoundException();
+			}
+			
 			List<EventDetails> eventDetails=eventMaster.getEventDetails();
 			
 			EventOrder eventOrder = EventOrder.fromJson(command,eventMaster, deviceData);
@@ -159,7 +161,7 @@ public class EventOrderWriteplatformServiceImpl implements
 		  BigDecimal eventPrice=new BigDecimal(bookedPrice);
 		  if(clientBalance!=null){
 			  BigDecimal resultantBalance = clientBalance.getBalanceAmount().add(eventPrice);
-			  if(resultantBalance.compareTo(BigDecimal.ZERO) == -1){
+			  if(resultantBalance.compareTo(BigDecimal.ZERO) == -1 || resultantBalance.compareTo(BigDecimal.ZERO) == 0){
 			  isBalanceAvailable = true;   
 			  }else {
 				  isBalanceAvailable = false;

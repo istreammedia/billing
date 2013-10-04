@@ -9,8 +9,10 @@ public interface UploadStatusWritePlatformService {
 
 
 	CommandProcessingResult addItem(UploadStatusCommand command);
-	CommandProcessingResult updateUploadStatus(Long orderId,ApiRequestJsonSerializationSettings settings);
+//	CommandProcessingResult updateUploadStatus(Long orderId,ApiRequestJsonSerializationSettings settings);
 	UploadStatusCommand convertJsonToUploadStatusCommand(Object object,String jsonRequestBody);
+	CommandProcessingResult updateUploadStatus(Long orderId, int countno,
+			ApiRequestJsonSerializationSettings settings);
 	
 	
 	

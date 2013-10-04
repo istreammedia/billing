@@ -341,6 +341,11 @@ public class ClientProspect extends AbstractAuditableCustom<AppUser, Long> {
 		
 		if(fromJsonHelper.parameterExists("sourceOfPublicity", element)){
 			String sourceOfPublicity = command.stringValueOfParameterNamed("sourceOfPublicity");
+			String sourceOther = command.stringValueOfParameterNamed("sourceOther");
+			if(!(sourceOther == "" || sourceOther == null || sourceOther.equals(""))){
+				sourceOfPublicity = sourceOther;
+			}
+			
 			clientProspect.setSourceOfPublicity(sourceOfPublicity);
 		}
 		

@@ -67,6 +67,7 @@ public class PaymentWritePlatformServiceImpl implements
 
 			this.fromApiJsonDeserializer.validateForCreate(command.json());
 			List<ClientBalanceData> clientBalancedatas = clientBalanceReadPlatformService.retrieveAllClientBalances(command.entityId());
+			
 			Long id=Long.valueOf(-1);
 			if(clientBalancedatas.size() == 1)
 				id= createPayments(clientBalancedatas.get(0).getId(),command.entityId(),command);											

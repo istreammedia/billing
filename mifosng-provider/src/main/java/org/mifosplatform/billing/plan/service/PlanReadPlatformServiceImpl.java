@@ -29,7 +29,8 @@ public class PlanReadPlatformServiceImpl implements PlanReadPlatformService {
 
 	private final JdbcTemplate jdbcTemplate;
 	private final PlatformSecurityContext context;
-	public final static String planTypeConst="prepaid";
+	public final static String POST_PAID="postpaid";
+	public final static String PREPAID="prepaid";
 
 	@Autowired
 	public PlanReadPlatformServiceImpl(final PlatformSecurityContext context,
@@ -116,12 +117,14 @@ public class PlanReadPlatformServiceImpl implements PlanReadPlatformService {
 		 String sql=null;
 		PlanDataMapper mapper = new PlanDataMapper();
 		
-		if(planType!=null && planType.equalsIgnoreCase(planTypeConst)){
+		if(planType!=null && planType.equalsIgnoreCase(PREPAID)){
 
 		 sql = "select " + mapper.schema()+" AND pm.is_prepaid ='Y'";
 		 
-		}else{
+		}else if(planType!=null && planType.equalsIgnoreCase(POST_PAID)){
 		
+			sql = "select " + mapper.schema()+" AND pm.is_prepaid ='N'";
+		}else{
 			sql = "select " + mapper.schema();
 		}
 

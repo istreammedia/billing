@@ -277,9 +277,9 @@ public List<ServiceData> retrieveServiceCodeDetails(Long planCode) {
 public PricingData retrieveSinglePriceDetails(String priceId) {
 	 context.authenticatedUser();
 
-     String sql = "SELECT p.plan_id AS planId,p.plan_id as planCode,s.id AS serviceId,c.id AS chargeId,p.charging_variant AS chargeVariant,p.price AS price," +
-     		" p.discount_id AS discountId,p.price_region_id as priceregion FROM b_plan_pricing p, b_service s, b_charge_codes c " +
-     		" WHERE p.charge_code = c.charge_code AND p.service_code = s.service_code AND p.id = ?";
+     String sql = "SELECT p.plan_id AS planId,pm.plan_code AS planCode,s.id AS serviceId,c.id AS chargeId,p.charging_variant AS chargeVariant,p.price AS price," +
+     		      "p.discount_id AS discountId,p.price_region_id AS priceregion  FROM b_plan_pricing p, b_service s, b_charge_codes c, b_plan_master pm  WHERE " +
+     		      " p.charge_code = c.charge_code AND p.service_code = s.service_code and pm.id = p.plan_id  AND p.id =?";
 
 
      RowMapper<PricingData> rm = new PricingMapper();

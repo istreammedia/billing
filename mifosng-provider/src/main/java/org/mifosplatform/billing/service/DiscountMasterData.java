@@ -25,6 +25,7 @@ public class DiscountMasterData {
 	private List<EnumOptionData> status;
 	private Collection<MCodeData> discounTypeData;
 	private String discountstatus;
+	private BigDecimal discountValue;
 
 	public DiscountMasterData(long id, String discountCode,String discountDescription, String discounType, BigDecimal discountRate,
 			LocalDate startDate,String status) {
@@ -60,7 +61,7 @@ public class DiscountMasterData {
 		this.discountStartDate = discountStartDate;
 		this.discountEndDate = discountEndDate;
 		this.discounType = discountType;
-		this.discountRate = discountRate;
+		this.discountValue = discountRate;
 		this.isDeleted = isDeleted;
 		this.discountAmount = BigDecimal.ZERO;
 		this.discountedChargeAmount = BigDecimal.ZERO;
@@ -198,6 +199,10 @@ public class DiscountMasterData {
 
 	public void setDiscountstatus(String discountstatus) {
 		this.discountstatus = discountstatus;
+	}
+
+	public BigDecimal getDiscountValue() {
+		return discountValue;
 	}
 	
 	

@@ -119,7 +119,7 @@ public RegionReadPlatformServiceImpl(final TenantAwareRoutingDataSource dataSour
 				context.authenticatedUser();
 				RegionDetailMapper mapper = new RegionDetailMapper();
 
-				String sql = "select " + mapper.schema();
+				String sql = "select " + mapper.schema()+" left join b_state s on pd.state_id=s.id WHERE pd.priceregion_id =? ";
 
 				return this.jdbcTemplate.query(sql, mapper, new Object[] {regionId});
 				}catch (final EmptyResultDataAccessException e) {
@@ -131,7 +131,7 @@ public RegionReadPlatformServiceImpl(final TenantAwareRoutingDataSource dataSour
 
 				public String schema() {
 					return " pd.id AS id,pd.priceregion_id AS regionId,pd.country_id AS countryId,pd.state_id AS stateId,s.state_name AS stateName" +
-							" FROM b_priceregion_detail pd  left join b_state s on pd.state_id=s.id WHERE pd.priceregion_id =? ";
+							" FROM b_priceregion_detail pd  ";
 
 				}
 
@@ -149,4 +149,19 @@ public RegionReadPlatformServiceImpl(final TenantAwareRoutingDataSource dataSour
 	                        return new RegionDetailsData(stateId,regionId,stateId,countryId,stateName);
 				}
 			}
+
+			@Override
+			public List<RegionDetailsData> getCountryRegionDetails(Long countryId,Long stateId) {
+				
+				try{
+					context.authenticatedUser();
+					RegionDetailMapper mapper = new RegionDetailMapper();
+
+					String sql = "select " + mapper.schema()+" left join b_state s on pd.state_id=s.id where pd.country_id =? and pd.state_id =? and pd.is_deleted = 'N'";
+
+					return this.jdbcTemplate.query(sql, mapper, new Object[] {countryId,stateId});
+					}catch (final EmptyResultDataAccessException e) {
+						return null;
+					}
+			}	
 }

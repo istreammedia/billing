@@ -16,6 +16,7 @@ import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.UriInfo;
@@ -91,6 +92,7 @@ public class OrdersApiResource {
         final CommandProcessingResult result = this.commandsSourceWritePlatformService.logCommandSource(commandRequest);
         return this.toApiJsonSerializer.serialize(result);
 	}
+	
 	@GET
 	@Path("template")
 	@Consumes({MediaType.APPLICATION_JSON})
@@ -101,6 +103,7 @@ public class OrdersApiResource {
 	final ApiRequestJsonSerializationSettings settings = apiRequestParameterHelper.process(uriInfo.getQueryParameters());
     return this.toApiJsonSerializer.serialize(settings, orderData, RESPONSE_DATA_PARAMETERS);
 	}
+	
 	private OrderData handleTemplateRelatedData() {
 		List<PlanCodeData> planDatas = this.orderReadPlatformService.retrieveAllPlatformData();
 		List<PaytermData> data=new ArrayList<PaytermData>();
@@ -232,6 +235,18 @@ public class OrdersApiResource {
 			final CommandWrapper commandRequest = new CommandWrapperBuilder().reconnectOrder(orderId).build();
 	        final CommandProcessingResult result = this.commandsSourceWritePlatformService.logCommandSource(commandRequest);
 	        return this.toApiJsonSerializer.serialize(result);
+		}
+	 
+	 
+	 @GET
+	 @Path("{clientId}/activeplans")
+		@Consumes({MediaType.APPLICATION_JSON})
+		@Produces({MediaType.APPLICATION_JSON})
+		public String retrieveActivePlans(@PathParam("clientId") final Long clientId,@QueryParam("planType") final String planType, @Context final UriInfo uriInfo) {
+		context.authenticatedUser().validateHasReadPermission(resourceNameForPermissions);
+		List<OrderData> datas=this.orderReadPlatformService.getActivePlans(clientId,planType);
+		final ApiRequestJsonSerializationSettings settings = apiRequestParameterHelper.process(uriInfo.getQueryParameters());
+	    return this.toApiJsonSerializer.serialize(settings, datas, RESPONSE_DATA_PARAMETERS);
 		}
 	 
 

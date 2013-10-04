@@ -28,6 +28,9 @@ public class UploadStatus extends AbstractPersistable<Long>{
 */
 	
 	
+	@Column(name="file_name", nullable=true, length=100)
+	private String fileName;
+	
 	
 	@Column(name="upload_process", nullable=false, length=20)
 	private String uploadProcess;
@@ -61,28 +64,29 @@ public class UploadStatus extends AbstractPersistable<Long>{
 	public UploadStatus(){}
 	
 	
-	public UploadStatus(String uploadProcess,String uploadFilePath,LocalDate processDate,String processStatus,Long processRecords,String errorMessage,String description){
+	public UploadStatus(String uploadProcess,String uploadFilePath,LocalDate processDate,String processStatus,Long processRecords,String errorMessage,String description, String fileName){
 		this.uploadProcess=uploadProcess;
 		this.uploadFilePath=uploadFilePath;
 		this.processDate=processDate.toDate();
-		this.processStatus="New UnProcessed";
+		this.processStatus=UploadStatusEnum.NEW.toString();
 		this.processRecords=processRecords;
 		this.errorMessage=errorMessage;
 		this.description=description;
+		this.fileName=fileName;
 		
 		
 	}
 	
-	public static UploadStatus create(String uploadProcess,String uploadFilePath,LocalDate processDate,String processStatus,Long processRecords,String errorMessage,String description){
+	public static UploadStatus create(String uploadProcess,String uploadFilePath,LocalDate processDate,String processStatus,Long processRecords,String errorMessage,String description, String fileName){
 		
-		return new UploadStatus(uploadProcess,uploadFilePath,processDate,processStatus,processRecords,errorMessage,description);
+		return new UploadStatus(uploadProcess,uploadFilePath,processDate,processStatus,processRecords,errorMessage,description,fileName);
 	}
 	
 	public void update(LocalDate currentDate,String processStatus,Long processRecords,Long unprocessedRecords, String errorMessage) {
 			this.processDate = currentDate.toDate();
-			this.processStatus=processStatus;
+			this.processStatus=unprocessedRecords > 0?UploadStatusEnum.ERROR.toString():UploadStatusEnum.COMPLETED.toString();
 			this.processRecords=processRecords;
-			this.errorMessage=errorMessage;
+			this.errorMessage=unprocessedRecords > 0?UploadStatusEnum.ERROR.toString():UploadStatusEnum.COMPLETED.toString();
 			this.unprocessedRecords=unprocessedRecords;
 			
 		}
@@ -120,6 +124,12 @@ public class UploadStatus extends AbstractPersistable<Long>{
 
 	public char getIsDeleted() {
 		return isDeleted;
+	}
+
+
+	public String getFileName() {
+		// TODO Auto-generated method stub
+		return fileName;
 	}
 
 

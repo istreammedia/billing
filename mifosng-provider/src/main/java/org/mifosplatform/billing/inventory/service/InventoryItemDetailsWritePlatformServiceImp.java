@@ -13,6 +13,7 @@ import org.mifosplatform.billing.inventory.domain.InventoryItemDetailsAllocation
 import org.mifosplatform.billing.inventory.domain.InventoryItemDetailsAllocationRepository;
 import org.mifosplatform.billing.inventory.domain.InventoryItemDetailsRepository;
 import org.mifosplatform.billing.inventory.domain.ItemDetailsRepository;
+import org.mifosplatform.billing.inventory.exception.OrderQuantityExceedsException;
 import org.mifosplatform.billing.inventory.mrn.domain.InventoryTransactionHistory;
 import org.mifosplatform.billing.inventory.mrn.domain.InventoryTransactionHistoryJpaRepository;
 import org.mifosplatform.billing.inventory.serialization.InventoryItemAllocationCommandFromApiJsonDeserializer;
@@ -22,6 +23,7 @@ import org.mifosplatform.billing.onetimesale.domain.OneTimeSale;
 import org.mifosplatform.billing.onetimesale.domain.OneTimeSaleRepository;
 import org.mifosplatform.billing.onetimesale.service.OneTimeSaleReadPlatformService;
 import org.mifosplatform.billing.order.domain.PlanHardwareMappingRepository;
+import org.mifosplatform.billing.order.exceptions.NoGrnIdFoundException;
 import org.mifosplatform.billing.transactionhistory.service.TransactionHistoryWritePlatformService;
 import org.mifosplatform.billing.uploadstatus.domain.UploadStatus;
 import org.mifosplatform.billing.uploadstatus.domain.UploadStatusRepository;
@@ -139,11 +141,11 @@ public class InventoryItemDetailsWritePlatformServiceImp implements InventoryIte
 					this.inventoryGrnRepository.save(inventoryGrn);
 				}else{
 					
-					throw new PlatformDataIntegrityException("no.more.ordered.quantity","no.more.ordered.quantity","no.more.ordered.quantity");
+					throw new OrderQuantityExceedsException(inventoryGrn.getOrderdQuantity());
 				}
 			}else{
 				
-				throw new PlatformDataIntegrityException("grnid.does.not.exist", "grnid.does.not.exist","grnid.does.not.exist","grnid.does.not.exist");
+				throw new NoGrnIdFoundException(inventoryItemDetails.getGrnId());
 			}
 			this.inventoryItemDetailsRepository.save(inventoryItemDetails);
 			InventoryTransactionHistory transactionHistory = InventoryTransactionHistory.logTransaction(new LocalDate().toDate(), inventoryItemDetails.getId(),"Item Detail",inventoryItemDetails.getSerialNumber(), inventoryItemDetails.getItemMasterId(), inventoryItemDetails.getGrnId(), inventoryGrn.getOfficeId());

@@ -8,6 +8,9 @@ import org.mifosplatform.billing.clientbalance.domain.ClientBalanceRepository;
 import org.mifosplatform.billing.payments.domain.Payment;
 import org.mifosplatform.infrastructure.core.api.JsonCommand;
 import org.mifosplatform.infrastructure.security.service.PlatformSecurityContext;
+import org.mifosplatform.portfolio.client.domain.Client;
+import org.mifosplatform.portfolio.client.domain.ClientRepository;
+import org.mifosplatform.portfolio.client.exception.ClientNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -16,12 +19,14 @@ public class UpdateClientBalance {
 
 	private final PlatformSecurityContext context;
 	private final ClientBalanceRepository clientBalanceRepository;
+	private final ClientRepository clientRepository;
 
 
 	@Autowired
-	public UpdateClientBalance(final PlatformSecurityContext context,final ClientBalanceRepository clientBalanceRepository) {
+	public UpdateClientBalance(final PlatformSecurityContext context,final ClientBalanceRepository clientBalanceRepository,final ClientRepository clientRepository) {
 		this.context = context;
 		this.clientBalanceRepository = clientBalanceRepository;
+		this.clientRepository=clientRepository;
 	}
 
 	public ClientBalance doUpdateAdjustmentClientBalance(JsonCommand command, ClientBalance clientBalance) {
@@ -44,6 +49,13 @@ public class UpdateClientBalance {
 	}
 
 	public ClientBalance saveClientBalanceEntity(ClientBalance clientBalance){
+		
+		Client client=this.clientRepository.findOne(clientBalance.getClientId());
+		
+		if(client == null){
+			throw new  ClientNotFoundException(clientBalance.getClientId());
+		}
+		
 		ClientBalance resultantClientBalance =  this.clientBalanceRepository.save(clientBalance);
 		return resultantClientBalance;
 	}
