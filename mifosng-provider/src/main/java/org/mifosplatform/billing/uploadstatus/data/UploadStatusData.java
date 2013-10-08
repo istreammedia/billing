@@ -14,14 +14,15 @@ public class UploadStatusData {
 	private final String errorMessage;
 	private final boolean flag;
 	private final Long unprocessRecords;
+	private final Long totalRecords;
 	 public static UploadStatusData instance(Long id,String uploadProcess,String uploadFilePath,LocalDate processDate,String processStatus,
 			 Long processRecords,Long unprocessRecords,String errorMessage)
 		{
-	        return new UploadStatusData(id,uploadProcess,uploadFilePath,processDate,processStatus,processRecords,unprocessRecords,errorMessage);
+	        return new UploadStatusData(id,uploadProcess,uploadFilePath,processDate,processStatus,processRecords,unprocessRecords,errorMessage,null);
 	    }
 	
 	
-	public UploadStatusData(Long id,String uploadProcess,String uploadFilePath,LocalDate processDate,String processStatus,Long processRecords,Long unprocessRecords, String errorMessage)
+	public UploadStatusData(Long id,String uploadProcess,String uploadFilePath,LocalDate processDate,String processStatus,Long processRecords,Long unprocessRecords, String errorMessage, Long totalRecords)
 	{
 		this.id=id;
 		this.uploadProcess=uploadProcess;
@@ -36,6 +37,7 @@ public class UploadStatusData {
 			this.flag=false;
 		}
 	    this.unprocessRecords=unprocessRecords;
+	    this.totalRecords=totalRecords;
 		
 	}
 

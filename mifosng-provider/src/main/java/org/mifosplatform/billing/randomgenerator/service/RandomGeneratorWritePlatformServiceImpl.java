@@ -97,7 +97,7 @@ public class RandomGeneratorWritePlatformServiceImpl implements
 		Long no = this.randomGeneratorReadPlatformService.retrieveMaxNo(minNo,
 				maxNo);
 		
-		 if(no==null){
+		 if(no==0){
 			   minSerialSeries="";
 			   for (x = 0; x < SerialNo; x++) {
 			    if (x == 0) {

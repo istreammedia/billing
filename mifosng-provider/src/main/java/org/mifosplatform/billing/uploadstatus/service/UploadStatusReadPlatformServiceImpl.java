@@ -34,7 +34,9 @@ public class UploadStatusReadPlatformServiceImpl implements UploadStatusReadPlat
     private static final class UploadStatusMapper implements RowMapper<UploadStatusData> {
 
         public String schema() {
-            return " u.id as Id ,u.upload_process as uploadProcess,u.upload_filepath as uploadFilePath,u.process_date as processDate,u.process_status as processStatus,u.process_records as processRecords,u.unprocess_records as unprocessRecords,u.error_message as errorMessage from uploads_status u ";
+            return " u.id as Id ,u.upload_process as uploadProcess,u.upload_filepath as uploadFilePath,u.total_records as totalRecords,u.process_date as processDate," +
+            		"u.process_status as processStatus,u.process_records as processRecords,u.unprocess_records as unprocessRecords,u.error_message as errorMessage " +
+            		"from uploads_status u ";
         }
 
         @Override
@@ -52,11 +54,12 @@ public class UploadStatusReadPlatformServiceImpl implements UploadStatusReadPlat
          final LocalDate processDate= JdbcSupport.getLocalDate(rs,"processDate");
        	 final String processStatus=rs.getString("processStatus");
        	 final Long processRecords=rs.getLong("processRecords");
+       	 final Long totalRecords=rs.getLong("totalRecords");
        	 final String errorMessage=rs.getString("errorMessage");
        	 final Long unprocessRecords=rs.getLong("unprocessRecords");
        	
 
-     return new UploadStatusData(id,uploadProcess,filePath,processDate,processStatus,processRecords,unprocessRecords,errorMessage);
+     return new UploadStatusData(id,uploadProcess,filePath,processDate,processStatus,processRecords,unprocessRecords,errorMessage,totalRecords);
        	//return UploadStatusData.
         }
     }

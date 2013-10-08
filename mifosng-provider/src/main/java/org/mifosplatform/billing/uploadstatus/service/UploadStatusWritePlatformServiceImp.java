@@ -181,7 +181,7 @@ public class UploadStatusWritePlatformServiceImp implements UploadStatusWritePla
 						if(v.elementAt(0).toString().equalsIgnoreCase("EOF"))
 						{
 							long unprocessedRecords=totalRecords-processRecords;
-							uploadStatus.update(currentDate,processStatus,processRecords,unprocessedRecords,errormessage);
+							uploadStatus.update(currentDate,processStatus,processRecords,unprocessedRecords,errormessage,totalRecords);
 							this.uploadStatusRepository.save(uploadStatus);
 							processRecords=new Long(0);
 							totalRecords=new Long(0);

@@ -141,7 +141,7 @@ private static final class retrieveMapper implements RowMapper<String> {
 			
 				return this.jdbcTemplate.queryForObject(sql, mapper, new Object[] { minNo,maxNo });
 			}catch (EmptyResultDataAccessException e) {
-				return null;
+				return new Long(0);
 			}
 	}
 	

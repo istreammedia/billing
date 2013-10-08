@@ -59,7 +59,8 @@ public class UploadStatus extends AbstractPersistable<Long>{
 	@Column(name="unprocess_records",nullable=true,length=20)
 	private Long unprocessedRecords;
 	
-	
+	@Column(name="total_records",nullable=true,length=20)
+	private Long totalRecords;
 
 	public UploadStatus(){}
 	
@@ -82,12 +83,13 @@ public class UploadStatus extends AbstractPersistable<Long>{
 		return new UploadStatus(uploadProcess,uploadFilePath,processDate,processStatus,processRecords,errorMessage,description,fileName);
 	}
 	
-	public void update(LocalDate currentDate,String processStatus,Long processRecords,Long unprocessedRecords, String errorMessage) {
+	public void update(LocalDate currentDate,String processStatus,Long processRecords,Long unprocessedRecords, String errorMessage, Long totalRecords) {
 			this.processDate = currentDate.toDate();
 			this.processStatus=unprocessedRecords > 0?UploadStatusEnum.ERROR.toString():UploadStatusEnum.COMPLETED.toString();
 			this.processRecords=processRecords;
 			this.errorMessage=unprocessedRecords > 0?UploadStatusEnum.ERROR.toString():UploadStatusEnum.COMPLETED.toString();
 			this.unprocessedRecords=unprocessedRecords;
+			this.totalRecords=totalRecords;
 			
 		}
 

@@ -256,7 +256,7 @@ public class InventoryItemDetailsWritePlatformServiceImp implements InventoryIte
 			currentDate.toDate();
 			if(uploadStatus.equalsIgnoreCase("UPLOADSTATUS")){
 				UploadStatus uploadStatusObject = this.uploadStatusRepository.findOne(orderId);
-				uploadStatusObject.update(currentDate,processStatus,processRecords,null,errormessage);
+				uploadStatusObject.update(currentDate,processStatus,processRecords,null,errormessage,null);
 				this.uploadStatusRepository.save(uploadStatusObject);
 			}
 			
